@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星际战机 - 太空射击游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        
+        #game-container {
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.5);
+        }
+        
+        #gameCanvas {
+            display: block;
+            background: linear-gradient(to bottom, #000020, #000040);
+        }
+        
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .hud-element {
+            position: absolute;
+            color: #fff;
+            text-shadow: 0 0 5px #00ffff;
+        }
+        
+        #score-display {
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+        }
+        
+        #health-display {
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+        }
+        
+        #level-display {
+            top: 40px;
+            right: 10px;
+            font-size: 16px;
+        }
+        
+        #wave-display {
+            top: 70px;
+            right: 10px;
+            font-size: 16px;
+        }
+        
+        #start-screen, #game-over-screen, #pause-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+        }
+        
+        .screen-title {
+            font-size: 48px;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 20px;
+        }
+        
+        .screen-subtitle {
+            font-size: 24px;
+            color: #ffffff;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            font-size: 20px;
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            border: none;
+            color: #000;
+            cursor: pointer;
+            margin: 10px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px #00ffff;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        #controls-hint {
+            margin-top: 30px;
+            color: #aaa;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .bar-container {
+            width: 200px;
+            height: 20px;
+            background: #333;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .bar-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        #health-bar {
+            background: linear-gradient(90deg, #ff0000, #ff6600);
+        }
+        
+        #exp-bar-container {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 200px;
+        }
+        
+        #exp-bar {
+            background: linear-gradient(90deg, #00ff00, #00ffff);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="ui-layer">
+            <div id="score-display" class="hud-element">分数：0</div>
+            <div id="health-display" class="hud-element">
+                <div class="bar-container">
+                    <div id="health-bar" class="bar-fill" style="width: 100%;"></div>
+                </div>
+            </div>
+            <div id="level-display" class="hud-element">等级：1</div>
+            <div id="wave-display" class="hud-element">波次：1</div>
+            
+            <div id="exp-bar-container" class="hud-element">
+                <div style="margin-bottom: 5px;">经验值:</div>
+                <div class="bar-container">
+                    <div id="exp-bar" class="bar-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="start-screen">
+            <div class="screen-title">星际战机</div>
+            <div class="screen-subtitle">太空射击游戏</div>
+            <button class="btn" id="start-btn">开始游戏</button>
+            <div id="controls-hint">
+                <p>WASD 或 方向键 - 移动</p>
+                <p>J 或 空格 - 射击</p>
+                <p>K - 释放技能</p>
+                <p>P - 暂停游戏</p>
+            </div>
+        </div>
+        
+        <div id="game-over-screen" class="hidden">
+            <div class="screen-title">游戏结束</div>
+            <div class="screen-subtitle" id="final-score">最终分数：0</div>
+            <button class="btn" id="restart-btn">重新开始</button>
+        </div>
+        
+        <div id="pause-screen" class="hidden">
+            <div class="screen-title">游戏暂停</div>
+            <button class="btn" id="resume-btn">继续游戏</button>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
