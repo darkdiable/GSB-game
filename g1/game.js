@@ -199,7 +199,7 @@ class Player extends GameObject {
     activateSkill(game) {
         this.skillActive = true;
         this.skillDuration = 5000;
-        this.skillCooldown = 0;
+        this.skillCooldown = CONFIG.SKILL_COOLDOWN;
         
         for (let i = 0; i < 360; i += 10) {
             const rad = i * Math.PI / 180;
@@ -228,10 +228,12 @@ class Player extends GameObject {
     
     levelUp() {
         this.level++;
-        this.experience = this.experienceToNextLevel;
+        this.experience -= this.experienceToNextLevel;
         this.experienceToNextLevel = Math.floor(this.experienceToNextLevel * 1.5);
         this.health = Math.min(this.health + 20, this.maxHealth);
-        this.weaponLevel = Math.min(this.weaponLevel + 1, 3);
+        if (this.level === 3 || this.level === 5) {
+            this.weaponLevel = Math.min(this.weaponLevel + 1, 3);
+        }
     }
     
     takeDamage(amount) {
@@ -402,7 +404,7 @@ class Enemy extends GameObject {
             this.active = false;
         }
         
-        if (this.type === 'shooter') {
+        if (this.type === 'shooter' && this.position.y > 50 && this.position.y < CONFIG.CANVAS_HEIGHT - 100) {
             if (this.shootCooldown > 0) {
                 this.shootCooldown -= deltaTime;
             } else {
@@ -754,7 +756,7 @@ class LevelSystem {
         if (game.enemies.length === 0 && !this.bossSpawned) {
             this.currentWave++;
             
-            if (this.currentWave % 5 === 0 && !this.bossSpawned) {
+            if (this.currentWave % 5 === 0) {
                 this.spawnBoss(game);
                 this.bossSpawned = true;
             } else {
@@ -764,11 +766,13 @@ class LevelSystem {
         
         if (game.boss && !game.boss.active) {
             this.currentWave = 0;
+            this.bossSpawned = false;
         }
     }
     
     spawnWave(game) {
-        const count = Math.min(this.enemiesPerWave + this.currentWave, 20);
+        const count = Math.min(this.enemiesPerWave + Math.floor(this.currentWave / 2), 15);
+        const waveTypes = this.getWaveTypes();
         
         for (let i = 0; i < count; i++) {
             setTimeout(() => {
@@ -784,7 +788,17 @@ class LevelSystem {
                         this.enemiesPerWave++;
                     }
                 }
-            }, i * 500);
+            }, i * 600);
+        }
+    }
+    
+    getWaveTypes() {
+        if (this.currentLevel === 1) {
+            return ['basic', 'basic', 'fast'];
+        } else if (this.currentLevel === 2) {
+            return ['basic', 'fast', 'shooter'];
+        } else {
+            return ['basic', 'fast', 'tank', 'shooter'];
         }
     }
     
@@ -1010,7 +1024,7 @@ class Game {
     
     updateUI() {
         this.ui.score.textContent = `分数：${this.score}`;
-        this.ui.health.style.width = `${(this.player.health / this.player.maxHealth) * 100}%`;
+        this.ui.health.style.width = `${Math.max(0, Math.min(100, (this.player.health / this.player.maxHealth) * 100))}%`;
         this.ui.level.textContent = `等级：${this.player.level}`;
         this.ui.wave.textContent = `波次：${this.levelSystem.currentWave}`;
         this.ui.exp.style.width = `${(this.player.experience / this.player.experienceToNextLevel) * 100}%`;
@@ -1111,7 +1125,8 @@ class Game {
     }
     
     gameLoop(timestamp) {
-        const deltaTime = timestamp - this.lastTime;
+        let deltaTime = timestamp - this.lastTime;
+        deltaTime = Math.min(deltaTime, 50);
         this.lastTime = timestamp;
         
         GlobalState.frameCount++;
