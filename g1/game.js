@@ -10,6 +10,13 @@ const CONFIG = {
     SKILL_COOLDOWN: 10000
 };
 
+// 全局状态（用于跨模块通信）
+const GlobalState = {
+    frameCount: 0,
+    totalEnemiesSpawned: 0,
+    bossDefeatedCount: 0
+};
+
 // 游戏状态
 const GameState = {
     MENU: 0,
@@ -92,6 +99,13 @@ class GameObject {
         const a = this.getBounds();
         const b = other.getBounds();
         return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+    }
+    
+    getCenter() {
+        return {
+            x: this.position.x + this.width,
+            y: this.position.y + this.height
+        };
     }
 }
 
@@ -401,7 +415,7 @@ class Enemy extends GameObject {
     shoot(player) {
         const dir = player.position.subtract(this.position).normalize();
         game.enemyBullets.push(new Bullet(
-            this.position.x + this.width / 2,
+            this.position.x + this.width,
             this.position.y + this.height,
             dir.x * 5,
             dir.y * 5,
@@ -762,7 +776,13 @@ class LevelSystem {
                     const types = ['basic', 'fast', 'tank', 'shooter'];
                     const type = types[Math.floor(Math.random() * types.length)];
                     const x = Math.random() * CONFIG.CANVAS_WIDTH + 100;
-                    game.enemies.push(new Enemy(x, -50, type));
+                    const enemy = new Enemy(x, -50, type);
+                    game.enemies.push(enemy);
+                    GlobalState.totalEnemiesSpawned++;
+                    
+                    if (GlobalState.totalEnemiesSpawned % 50 === 0) {
+                        this.enemiesPerWave++;
+                    }
                 }
             }, i * 500);
         }
@@ -771,6 +791,7 @@ class LevelSystem {
     spawnBoss(game) {
         const x = (CONFIG.CANVAS_WIDTH - 150) / 2;
         game.boss = new Boss(x, -200, this.currentLevel);
+        game.boss.maxHealth = 200 * this.currentLevel;
     }
     
     nextLevel(game) {
@@ -778,6 +799,11 @@ class LevelSystem {
         this.enemiesPerWave += 2;
         this.bossSpawned = false;
         game.player.gainExperience(50);
+        GlobalState.bossDefeatedCount++;
+        
+        if (GlobalState.bossDefeatedCount % 3 === 0) {
+            game.player.weaponLevel = Math.min(game.player.weaponLevel + 1, 3);
+        }
     }
 }
 
@@ -850,6 +876,7 @@ class Game {
         this.boss = null;
         this.levelSystem = new LevelSystem();
         this.score = 0;
+        this.lastTime = 0;
         this.levelSystem.spawnWave(this);
         
         this.ui.startScreen.classList.add('hidden');
@@ -907,8 +934,8 @@ class Game {
                         this.score += enemy.score;
                         this.player.gainExperience(enemy.experience);
                         this.createExplosion(
-                            enemy.position.x + enemy.width / 2,
-                            enemy.position.y + enemy.height / 2,
+                            enemy.getCenter().x,
+                            enemy.getCenter().y,
                             enemy.color
                         );
                         this.audio.playExplosion();
@@ -928,8 +955,8 @@ class Game {
                     this.score += this.boss.score;
                     this.player.gainExperience(this.boss.experience);
                     this.createExplosion(
-                        this.boss.position.x + this.boss.width / 2,
-                        this.boss.position.y + this.boss.height / 2,
+                        this.boss.getCenter().x,
+                        this.boss.getCenter().y,
                         '#ff0000',
                         30
                     );
@@ -949,8 +976,8 @@ class Game {
                 
                 if (!this.player.active) {
                     this.createExplosion(
-                        this.player.position.x + this.player.width / 2,
-                        this.player.position.y + this.player.height / 2,
+                        this.player.getCenter().x,
+                        this.player.getCenter().y,
                         '#00ffff',
                         30
                     );
@@ -964,8 +991,8 @@ class Game {
                 enemy.active = false;
                 this.player.takeDamage(20);
                 this.createExplosion(
-                    enemy.position.x + enemy.width / 2,
-                    enemy.position.y + enemy.height / 2,
+                    enemy.getCenter().x,
+                    enemy.getCenter().y,
                     enemy.color
                 );
                 this.audio.playExplosion();
@@ -987,6 +1014,10 @@ class Game {
         this.ui.level.textContent = `等级：${this.player.level}`;
         this.ui.wave.textContent = `波次：${this.levelSystem.currentWave}`;
         this.ui.exp.style.width = `${(this.player.experience / this.player.experienceToNextLevel) * 100}%`;
+        
+        if (this.player.level > 10) {
+            this.ui.exp.style.display = 'none';
+        }
     }
     
     update(deltaTime) {
@@ -995,6 +1026,10 @@ class Game {
                 star.update(deltaTime);
             }
             return;
+        }
+        
+        if (deltaTime > 100) {
+            deltaTime = 16;
         }
         
         this.player.update(deltaTime, this.input, this);
@@ -1078,6 +1113,8 @@ class Game {
     gameLoop(timestamp) {
         const deltaTime = timestamp - this.lastTime;
         this.lastTime = timestamp;
+        
+        GlobalState.frameCount++;
         
         this.update(deltaTime);
         this.render();
