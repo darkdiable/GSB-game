@@ -103,8 +103,8 @@ class GameObject {
     
     getCenter() {
         return {
-            x: this.position.x + this.width,
-            y: this.position.y + this.height
+            x: this.position.x + this.width / 2,
+            y: this.position.y + this.height / 2
         };
     }
 }
@@ -199,7 +199,7 @@ class Player extends GameObject {
     activateSkill(game) {
         this.skillActive = true;
         this.skillDuration = 5000;
-        this.skillCooldown = 0;
+        this.skillCooldown = CONFIG.SKILL_COOLDOWN;
         
         for (let i = 0; i < 360; i += 10) {
             const rad = i * Math.PI / 180;
@@ -228,10 +228,12 @@ class Player extends GameObject {
     
     levelUp() {
         this.level++;
-        this.experience = this.experienceToNextLevel;
+        this.experience = this.experience - this.experienceToNextLevel;
         this.experienceToNextLevel = Math.floor(this.experienceToNextLevel * 1.5);
         this.health = Math.min(this.health + 20, this.maxHealth);
-        this.weaponLevel = Math.min(this.weaponLevel + 1, 3);
+        if (this.level % 3 === 0) {
+            this.weaponLevel = Math.min(this.weaponLevel + 1, 3);
+        }
     }
     
     takeDamage(amount) {
@@ -415,8 +417,8 @@ class Enemy extends GameObject {
     shoot(player) {
         const dir = player.position.subtract(this.position).normalize();
         game.enemyBullets.push(new Bullet(
-            this.position.x + this.width,
-            this.position.y + this.height,
+            this.position.x + this.width / 2,
+            this.position.y + this.height / 2,
             dir.x * 5,
             dir.y * 5,
             '#ff00ff',
@@ -751,37 +753,40 @@ class LevelSystem {
     }
     
     update(game) {
-        if (game.enemies.length === 0 && !this.bossSpawned) {
+        if (game.enemies.length === 0 && !this.bossSpawned && (!game.boss || !game.boss.active)) {
             this.currentWave++;
-            
-            if (this.currentWave % 5 === 0 && !this.bossSpawned) {
+
+            if (this.currentWave % 5 === 0) {
                 this.spawnBoss(game);
                 this.bossSpawned = true;
             } else {
                 this.spawnWave(game);
             }
         }
-        
-        if (game.boss && !game.boss.active) {
+
+        if (game.boss && !game.boss.active && this.bossSpawned) {
+            this.bossSpawned = false;
             this.currentWave = 0;
+            this.currentLevel++;
         }
     }
     
     spawnWave(game) {
-        const count = Math.min(this.enemiesPerWave + this.currentWave, 20);
-        
+        const count = Math.min(this.enemiesPerWave + Math.floor(this.currentWave / 2), 15);
+
         for (let i = 0; i < count; i++) {
             setTimeout(() => {
                 if (game.state === GameState.PLAYING) {
                     const types = ['basic', 'fast', 'tank', 'shooter'];
                     const type = types[Math.floor(Math.random() * types.length)];
-                    const x = Math.random() * CONFIG.CANVAS_WIDTH + 100;
+                    const x = Math.random() * (CONFIG.CANVAS_WIDTH - 60) + 30;
                     const enemy = new Enemy(x, -50, type);
+                    enemy.speed = Math.min(enemy.speed + this.currentLevel * 0.1, enemy.speed * 2);
                     game.enemies.push(enemy);
                     GlobalState.totalEnemiesSpawned++;
-                    
+
                     if (GlobalState.totalEnemiesSpawned % 50 === 0) {
-                        this.enemiesPerWave++;
+                        this.enemiesPerWave = Math.min(this.enemiesPerWave + 1, 10);
                     }
                 }
             }, i * 500);
@@ -1015,9 +1020,7 @@ class Game {
         this.ui.wave.textContent = `波次：${this.levelSystem.currentWave}`;
         this.ui.exp.style.width = `${(this.player.experience / this.player.experienceToNextLevel) * 100}%`;
         
-        if (this.player.level > 10) {
-            this.ui.exp.style.display = 'none';
-        }
+
     }
     
     update(deltaTime) {
@@ -1111,14 +1114,17 @@ class Game {
     }
     
     gameLoop(timestamp) {
-        const deltaTime = timestamp - this.lastTime;
+        if (!this.lastTime) this.lastTime = timestamp;
+        let deltaTime = timestamp - this.lastTime;
         this.lastTime = timestamp;
-        
+
+        deltaTime = Math.min(deltaTime, 50);
+
         GlobalState.frameCount++;
-        
+
         this.update(deltaTime);
         this.render();
-        
+
         requestAnimationFrame((t) => this.gameLoop(t));
     }
 }
