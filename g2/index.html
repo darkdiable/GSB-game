@@ -133,8 +133,10 @@
             
             if (overlayButton.textContent === '重新开始') {
                 game.reset();
+                game.start();
             } else if (overlayButton.textContent === '下一关') {
                 game.nextLevel();
+                game.start();
             } else {
                 game.start();
             }
