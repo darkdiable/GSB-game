@@ -25,9 +25,9 @@ class Game {
 
         this.keys = {
             left: false,
-            right: false,
-            space: false
+            right: false
         };
+        this.spaceCanFire = true;
 
         this.currentFrame = 0;
         this.isPaused = false;
@@ -85,7 +85,7 @@ class Game {
         }
         if (key === ' ' || e.code === 'Space') {
             e.preventDefault();
-            if (!e.repeat) {
+            if (this.spaceCanFire) {
                 if (!this.isPaused && !this.isGameOver) {
                     this.bulletManager.fire(
                         this.player.getCenterX(),
@@ -94,6 +94,7 @@ class Game {
                         this.currentFrame
                     );
                 }
+                this.spaceCanFire = false;
             }
         }
         if (key === 'p') {
@@ -120,8 +121,8 @@ class Game {
         if (key === 'd' || key === 'arrowright') {
             this.keys.right = false;
         }
-        if (key === ' ') {
-            this.keys.space = false;
+        if (key === ' ' || e.code === 'Space') {
+            this.spaceCanFire = true;
         }
     }
 
@@ -167,6 +168,7 @@ class Game {
         this.currentFrame = 0;
         this.isPaused = false;
         this.isGameOver = false;
+        this.spaceCanFire = true;
 
         this.gameLoop();
     }
