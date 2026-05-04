@@ -83,10 +83,9 @@ class Game {
         if (key === 'd' || key === 'arrowright') {
             this.keys.right = true;
         }
-        if (key === ' ') {
+        if (key === ' ' || e.code === 'Space') {
             e.preventDefault();
-            if (!this.keys.space) {
-                this.keys.space = true;
+            if (!e.repeat) {
                 if (!this.isPaused && !this.isGameOver) {
                     this.bulletManager.fire(
                         this.player.getCenterX(),
