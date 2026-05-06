@@ -199,7 +199,7 @@ class Player extends GameObject {
     activateSkill(game) {
         this.skillActive = true;
         this.skillDuration = 5000;
-        this.skillCooldown = 0;
+        this.skillCooldown = CONFIG.SKILL_COOLDOWN;
         
         for (let i = 0; i < 360; i += 10) {
             const rad = i * Math.PI / 180;
@@ -221,17 +221,19 @@ class Player extends GameObject {
     
     gainExperience(amount) {
         this.experience += amount;
-        if (this.experience >= this.experienceToNextLevel) {
+        while (this.experience >= this.experienceToNextLevel) {
             this.levelUp();
         }
     }
     
     levelUp() {
         this.level++;
-        this.experience = this.experienceToNextLevel;
+        this.experience = this.experience - this.experienceToNextLevel;
         this.experienceToNextLevel = Math.floor(this.experienceToNextLevel * 1.5);
         this.health = Math.min(this.health + 20, this.maxHealth);
-        this.weaponLevel = Math.min(this.weaponLevel + 1, 3);
+        if (this.level % 3 === 0) {
+            this.weaponLevel = Math.min(this.weaponLevel + 1, 3);
+        }
     }
     
     takeDamage(amount) {
@@ -754,7 +756,7 @@ class LevelSystem {
         if (game.enemies.length === 0 && !this.bossSpawned) {
             this.currentWave++;
             
-            if (this.currentWave % 5 === 0 && !this.bossSpawned) {
+            if (this.currentWave % 5 === 0) {
                 this.spawnBoss(game);
                 this.bossSpawned = true;
             } else {
@@ -763,17 +765,24 @@ class LevelSystem {
         }
         
         if (game.boss && !game.boss.active) {
-            this.currentWave = 0;
+            this.bossSpawned = false;
+            game.boss = null;
         }
     }
     
     spawnWave(game) {
-        const count = Math.min(this.enemiesPerWave + this.currentWave, 20);
+        const baseCount = 5;
+        const levelBonus = Math.floor(this.currentLevel / 2);
+        const count = Math.min(baseCount + levelBonus, 15);
         
         for (let i = 0; i < count; i++) {
             setTimeout(() => {
                 if (game.state === GameState.PLAYING) {
-                    const types = ['basic', 'fast', 'tank', 'shooter'];
+                    let types = ['basic'];
+                    if (this.currentLevel >= 2) types.push('fast');
+                    if (this.currentLevel >= 3) types.push('shooter');
+                    if (this.currentLevel >= 4) types.push('tank');
+                    
                     const type = types[Math.floor(Math.random() * types.length)];
                     const x = Math.random() * CONFIG.CANVAS_WIDTH + 100;
                     const enemy = new Enemy(x, -50, type);
@@ -1111,7 +1120,7 @@ class Game {
     }
     
     gameLoop(timestamp) {
-        const deltaTime = timestamp - this.lastTime;
+        let deltaTime = timestamp - this.lastTime;
         this.lastTime = timestamp;
         
         GlobalState.frameCount++;
