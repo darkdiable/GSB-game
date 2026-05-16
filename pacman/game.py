@@ -87,20 +87,26 @@ class Game:
 
         self.pacman.update(self.maze)
 
-        pacman_col, pacman_row = self.maze.get_cell(self.pacman.x, self.pacman.y)
-        cell_center_x = pacman_col * CELL_SIZE + CELL_SIZE // 2
-        cell_center_y = pacman_row * CELL_SIZE + CELL_SIZE // 2
+        pacman_rect = self.pacman.get_rect()
+        eat_radius = CELL_SIZE // 2
 
-        if abs(self.pacman.x - cell_center_x) < 3 and abs(self.pacman.y - cell_center_y) < 3:
-            pellet_pos = (cell_center_x, cell_center_y)
-            if pellet_pos in self.maze.pellets:
-                self.maze.remove_pellet(*pellet_pos)
+        pellets_to_remove = []
+        for px, py in self.maze.pellets:
+            if abs(self.pacman.x - px) < eat_radius and abs(self.pacman.y - py) < eat_radius:
+                pellets_to_remove.append((px, py))
                 self.score += 10
-            if pellet_pos in self.maze.power_pellets:
-                self.maze.remove_power_pellet(*pellet_pos)
+        for p in pellets_to_remove:
+            self.maze.remove_pellet(*p)
+
+        power_pellets_to_remove = []
+        for px, py in self.maze.power_pellets:
+            if abs(self.pacman.x - px) < eat_radius and abs(self.pacman.y - py) < eat_radius:
+                power_pellets_to_remove.append((px, py))
                 self.score += 50
                 for ghost in self.ghosts:
                     ghost.make_edible()
+        for p in power_pellets_to_remove:
+            self.maze.remove_power_pellet(*p)
 
         for ghost in self.ghosts:
             ghost.update(self.maze, self.pacman, dt)

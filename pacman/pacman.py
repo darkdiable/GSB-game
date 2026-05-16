@@ -31,41 +31,49 @@ class Pacman:
 
     def can_move(self, direction, maze):
         dx, dy = direction
-        new_x = self.x + dx * CELL_SIZE
-        new_y = self.y + dy * CELL_SIZE
-        col = int(new_x // CELL_SIZE)
-        row = int(new_y // CELL_SIZE)
+        col = int(self.x // CELL_SIZE)
+        row = int(self.y // CELL_SIZE)
+        new_col = col + dx
+        new_row = row + dy
 
         if dx != 0:
-            center_row = int(self.y // CELL_SIZE)
-            if abs(self.y - (center_row * CELL_SIZE + CELL_SIZE // 2)) > 2:
+            center_y = row * CELL_SIZE + CELL_SIZE // 2
+            if abs(self.y - center_y) > 3:
                 return False
 
         if dy != 0:
-            center_col = int(self.x // CELL_SIZE)
-            if abs(self.x - (center_col * CELL_SIZE + CELL_SIZE // 2)) > 2:
+            center_x = col * CELL_SIZE + CELL_SIZE // 2
+            if abs(self.x - center_x) > 3:
                 return False
 
-        if col < 0 or col >= COLS or row < 0 or row >= ROWS:
-            if row == 14 and (col < 0 or col >= COLS):
+        if new_col < 0 or new_col >= COLS or new_row < 0 or new_row >= ROWS:
+            if new_row == 14 and (new_col < 0 or new_col >= COLS):
                 return True
             return False
 
-        return not maze.is_wall(col, row)
+        return not maze.is_wall(new_col, new_row)
 
     def update(self, maze):
         if self.next_direction != STOP and self.can_move(self.next_direction, maze):
             self.direction = self.next_direction
             self.next_direction = STOP
 
-        if self.can_move(self.direction, maze):
-            self.x += self.direction[0] * PACMAN_SPEED
-            self.y += self.direction[1] * PACMAN_SPEED
+        if self.direction != STOP:
+            if self.can_move(self.direction, maze):
+                self.x += self.direction[0] * PACMAN_SPEED
+                self.y += self.direction[1] * PACMAN_SPEED
 
-            if self.x < 0:
-                self.x = WIDTH - CELL_SIZE // 2
-            elif self.x > WIDTH:
-                self.x = CELL_SIZE // 2
+                if self.x < 0:
+                    self.x = WIDTH - CELL_SIZE // 2
+                elif self.x > WIDTH:
+                    self.x = CELL_SIZE // 2
+            else:
+                col = int(self.x // CELL_SIZE)
+                row = int(self.y // CELL_SIZE)
+                center_x = col * CELL_SIZE + CELL_SIZE // 2
+                center_y = row * CELL_SIZE + CELL_SIZE // 2
+                self.x = center_x
+                self.y = center_y
 
         if self.direction != STOP:
             if self.mouth_opening:
