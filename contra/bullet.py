@@ -13,10 +13,13 @@ class Bullet:
         speed = ENEMY_BULLET_SPEED if is_enemy else BULLET_SPEED
         self.vx = speed * direction
         self.active = True
+        self.lifetime = 0
+        self.max_lifetime = 120
 
     def update(self):
         self.x += self.vx
-        if self.x < -100 or self.x > SCREEN_WIDTH + 100:
+        self.lifetime += 1
+        if self.lifetime > self.max_lifetime:
             self.active = False
 
     def draw(self, screen, camera_x):
