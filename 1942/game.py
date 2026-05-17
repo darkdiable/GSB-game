@@ -90,7 +90,7 @@ class Game:
                     if areas:
                         area = random.choice(areas)
                         x = random.randint(area[0], area[1])
-                        y = SCREEN_HEIGHT // 2 + random.randint(20, 100)
+                        y = -SHIP_HEIGHT - random.randint(0, 200)
                         self.enemies.append(Enemy(x, y, 'ship'))
 
     def update_enemies(self):

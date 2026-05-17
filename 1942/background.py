@@ -75,10 +75,10 @@ class Background:
                 wave['y'] = -20
                 wave['x'] = random.randint(0, SCREEN_WIDTH)
 
-    def check_island_aa_spawn(self, y_threshold=100):
+    def check_island_aa_spawn(self, y_threshold=-AA_GUN_HEIGHT):
         aa_positions = []
         for island in self.islands:
-            if island['has_aa'] and not island['aa_spawned'] and island['y'] > y_threshold and island['y'] < y_threshold + 50:
+            if island['has_aa'] and not island['aa_spawned'] and island['y'] > y_threshold and island['y'] < y_threshold + 80:
                 island['aa_spawned'] = True
                 aa_x = island['x'] + island['width'] // 2 - AA_GUN_WIDTH // 2
                 aa_y = island['y'] + island['height'] // 2 - AA_GUN_HEIGHT // 2
