@@ -53,15 +53,27 @@ class Slider:
 
 
 class Distractor:
-    def __init__(self):
-        self.x = random.randint(50, SCREEN_WIDTH - DISTRACTOR_SIZE - 50)
-        self.y = random.randint(50, SCREEN_HEIGHT - DISTRACTOR_SIZE - 50)
+    def __init__(self, safe_zones):
+        while True:
+            self.x = random.randint(50, SCREEN_WIDTH - DISTRACTOR_SIZE - 50)
+            self.y = random.randint(50, SCREEN_HEIGHT - DISTRACTOR_SIZE - 50)
+            self.size = DISTRACTOR_SIZE
+            distractor_rect = pygame.Rect(self.x, self.y, self.size, self.size)
+            
+            overlaps = False
+            for zone in safe_zones:
+                if distractor_rect.colliderect(zone):
+                    overlaps = True
+                    break
+            
+            if not overlaps:
+                break
+        
         self.color = (
             random.randint(0, 255),
             random.randint(0, 255),
             random.randint(0, 255)
         )
-        self.size = DISTRACTOR_SIZE
         self.alpha = random.randint(100, 200)
 
     def draw(self, screen):
@@ -77,9 +89,9 @@ class ColorSoundGame:
         pygame.display.set_caption("颜色听觉 - Color Sound")
         self.clock = pygame.time.Clock()
         
-        self.font_large = pygame.font.Font(None, FONT_SIZE_LARGE)
-        self.font_medium = pygame.font.Font(None, FONT_SIZE_MEDIUM)
-        self.font_small = pygame.font.Font(None, FONT_SIZE_SMALL)
+        self.font_large = self._load_font(FONT_SIZE_LARGE)
+        self.font_medium = self._load_font(FONT_SIZE_MEDIUM)
+        self.font_small = self._load_font(FONT_SIZE_SMALL)
         
         self.audio_synth = AudioSynth()
         
@@ -98,6 +110,45 @@ class ColorSoundGame:
         self.last_distractor_time = 0
         
         self.submit_button = pygame.Rect(SLIDER_X, SLIDER_START_Y + SLIDER_GAP * 3 + 20, SLIDER_WIDTH, 50)
+        
+        self.safe_zones = self._init_safe_zones()
+
+    def _load_font(self, size):
+        font_paths = [
+            "/System/Library/Fonts/PingFang.ttc",
+            "/System/Library/Fonts/STHeiti Medium.ttc",
+            "/Library/Fonts/Arial Unicode.ttf",
+        ]
+        for path in font_paths:
+            try:
+                return pygame.font.Font(path, size)
+            except:
+                continue
+        return pygame.font.Font(None, size)
+
+    def _init_safe_zones(self):
+        zones = []
+        
+        zones.append(pygame.Rect(0, 0, SCREEN_WIDTH, 130))
+        zones.append(pygame.Rect(
+            TARGET_COLOR_X - 20,
+            TARGET_COLOR_Y - 50,
+            TARGET_COLOR_SIZE + 40,
+            TARGET_COLOR_SIZE + 80
+        ))
+        zones.append(pygame.Rect(
+            CURRENT_COLOR_X - 20,
+            CURRENT_COLOR_Y - 50,
+            CURRENT_COLOR_SIZE + 40,
+            CURRENT_COLOR_SIZE + 80
+        ))
+        zones.append(pygame.Rect(
+            SLIDER_X - 20,
+            SLIDER_START_Y - 50,
+            SLIDER_WIDTH + 40,
+            SLIDER_GAP * 4 + 120
+        ))
+        return zones
 
     def generate_target_color(self):
         return (
@@ -170,7 +221,7 @@ class ColorSoundGame:
             if current_time - self.last_distractor_time > 2000:
                 self.last_distractor_time = current_time
                 if len(self.distractors) < min(MAX_DISTRACTORS, self.level - 1):
-                    self.distractors.append(Distractor())
+                    self.distractors.append(Distractor(self.safe_zones))
             
             self.distractors = [d for d in self.distractors if random.random() > 0.005]
 
