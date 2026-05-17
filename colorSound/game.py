@@ -129,18 +129,18 @@ class ColorSoundGame:
     def _init_safe_zones(self):
         zones = []
         
-        zones.append(pygame.Rect(0, 0, SCREEN_WIDTH, 110))
+        zones.append(pygame.Rect(0, 0, SCREEN_WIDTH, 140))
         zones.append(pygame.Rect(
             TARGET_COLOR_X - 30,
             TARGET_COLOR_Y - 50,
             TARGET_COLOR_SIZE + 60,
-            TARGET_COLOR_SIZE + 90
+            TARGET_COLOR_SIZE + 100
         ))
         zones.append(pygame.Rect(
             CURRENT_COLOR_X - 30,
             CURRENT_COLOR_Y - 50,
             CURRENT_COLOR_SIZE + 60,
-            CURRENT_COLOR_SIZE + 90
+            CURRENT_COLOR_SIZE + 100
         ))
         zones.append(pygame.Rect(
             SLIDER_X - 30,
