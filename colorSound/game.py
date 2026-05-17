@@ -12,7 +12,7 @@ class Slider:
         self.label = label
         self.value = 128
         self.dragging = False
-        self.handle_radius = 15
+        self.handle_radius = 12
 
     def get_handle_x(self):
         return self.rect.x + (self.value / 255) * self.rect.width
@@ -49,7 +49,7 @@ class Slider:
         pygame.draw.circle(screen, self.color, (int(handle_x), handle_y), self.handle_radius - 3)
         
         label_text = font.render(f"{self.label}: {self.value}", True, WHITE)
-        screen.blit(label_text, (self.rect.x, self.rect.y - 35))
+        screen.blit(label_text, (self.rect.x, self.rect.y - 28))
 
 
 class Distractor:
@@ -129,24 +129,24 @@ class ColorSoundGame:
     def _init_safe_zones(self):
         zones = []
         
-        zones.append(pygame.Rect(0, 0, SCREEN_WIDTH, 120))
+        zones.append(pygame.Rect(0, 0, SCREEN_WIDTH, 110))
         zones.append(pygame.Rect(
-            TARGET_COLOR_X - 20,
+            TARGET_COLOR_X - 30,
             TARGET_COLOR_Y - 50,
-            TARGET_COLOR_SIZE + 40,
-            TARGET_COLOR_SIZE + 80
+            TARGET_COLOR_SIZE + 60,
+            TARGET_COLOR_SIZE + 90
         ))
         zones.append(pygame.Rect(
-            CURRENT_COLOR_X - 20,
+            CURRENT_COLOR_X - 30,
             CURRENT_COLOR_Y - 50,
-            CURRENT_COLOR_SIZE + 40,
-            CURRENT_COLOR_SIZE + 80
+            CURRENT_COLOR_SIZE + 60,
+            CURRENT_COLOR_SIZE + 90
         ))
         zones.append(pygame.Rect(
-            SLIDER_X - 20,
+            SLIDER_X - 30,
             SLIDER_START_Y - 50,
-            SLIDER_WIDTH + 40,
-            SLIDER_GAP * 4 + 100
+            SLIDER_WIDTH + 60,
+            SLIDER_GAP * 4 + 120
         ))
         return zones
 
