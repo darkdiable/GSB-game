@@ -54,6 +54,8 @@ class Enemy:
             if self.x <= 50 or self.x >= SCREEN_WIDTH - self.width - 50:
                 self.dx *= -1
             self.y += BG_SCROLL_SPEED
+        elif self.enemy_type == 'aa_gun':
+            self.y += BG_SCROLL_SPEED
 
         if self.y > SCREEN_HEIGHT + self.height:
             self.active = False
