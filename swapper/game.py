@@ -1,9 +1,25 @@
 import pygame
 import random
+import os
 from constants import *
 from particle import Particle
 from gate import Gate
 from effects import CollapseEffect, ScorePopup, DynamicBackground
+
+
+def get_chinese_font(size):
+    font_paths = [
+        "/System/Library/Fonts/PingFang.ttc",
+        "/System/Library/Fonts/STHeiti Medium.ttc",
+        "/System/Library/Fonts/STHeiti Light.ttc",
+    ]
+    for path in font_paths:
+        if os.path.exists(path):
+            try:
+                return pygame.font.Font(path, size)
+            except:
+                continue
+    return pygame.font.SysFont("PingFang SC,Heiti SC,Microsoft YaHei,SimHei,Arial", size)
 
 
 class Game:
@@ -12,9 +28,9 @@ class Game:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("量子纠缠交换")
         self.clock = pygame.time.Clock()
-        self.font_large = pygame.font.Font(None, 48)
-        self.font_medium = pygame.font.Font(None, 32)
-        self.font_small = pygame.font.Font(None, 24)
+        self.font_large = get_chinese_font(48)
+        self.font_medium = get_chinese_font(32)
+        self.font_small = get_chinese_font(24)
         
         self.reset()
 
