@@ -30,6 +30,18 @@ class Enemy:
             self.score = 300
             self.dx = random.choice([-1, 1])
             self.can_shoot = True
+        elif enemy_type == 'big_plane':
+            self.width = BIG_PLANE_WIDTH
+            self.height = BIG_PLANE_HEIGHT
+            self.health = BIG_PLANE_HEALTH
+            self.max_health = BIG_PLANE_HEALTH
+            self.speed = 1
+            self.score = BIG_PLANE_SCORE
+            self.dx = random.choice([-1, 1])
+            self.can_shoot = True
+            self.stay_timer = BIG_PLANE_STAY_TIME
+            self.state = 'entering'
+            self.target_y = 80
         else:
             self.width = AA_GUN_WIDTH
             self.height = AA_GUN_HEIGHT
@@ -54,10 +66,27 @@ class Enemy:
             if self.x <= 50 or self.x >= SCREEN_WIDTH - self.width - 50:
                 self.dx *= -1
             self.y += BG_SCROLL_SPEED
+        elif self.enemy_type == 'big_plane':
+            if self.state == 'entering':
+                self.y += 2
+                if self.y >= self.target_y:
+                    self.y = self.target_y
+                    self.state = 'staying'
+            elif self.state == 'staying':
+                self.x += self.dx * 1.5
+                if self.x <= 20 or self.x >= SCREEN_WIDTH - self.width - 20:
+                    self.dx *= -1
+                self.stay_timer -= 16
+                if self.stay_timer <= 0:
+                    self.state = 'leaving'
+            elif self.state == 'leaving':
+                self.x += self.dx * 3
+                if self.x < -self.width or self.x > SCREEN_WIDTH + self.width:
+                    self.active = False
         elif self.enemy_type == 'aa_gun':
             self.y += BG_SCROLL_SPEED
 
-        if self.y > SCREEN_HEIGHT + self.height:
+        if self.enemy_type != 'big_plane' and self.y > SCREEN_HEIGHT + self.height:
             self.active = False
 
         if self.shoot_cooldown > 0:
@@ -65,14 +94,18 @@ class Enemy:
 
     def shoot(self, player_x, player_y):
         if self.can_shoot and self.shoot_cooldown <= 0 and self.y > 0 and self.y < SCREEN_HEIGHT - 100:
-            self.shoot_cooldown = random.randint(80, 150)
+            if self.enemy_type == 'big_plane':
+                self.shoot_cooldown = random.randint(40, 80)
+            else:
+                self.shoot_cooldown = random.randint(80, 150)
             bullets = []
             if self.enemy_type == 'plane':
                 bullets.append((self.x + self.width // 2 - BULLET_WIDTH // 2, self.y + self.height, False, True))
+            elif self.enemy_type == 'big_plane':
+                bullets.append((self.x + 30, self.y + self.height, False, True))
+                bullets.append((self.x + self.width // 2 - BULLET_WIDTH // 2, self.y + self.height, False, True))
+                bullets.append((self.x + self.width - 36, self.y + self.height, False, True))
             else:
-                dx = player_x - self.x
-                dy = player_y - self.y
-                dist = max(1, (dx ** 2 + dy ** 2) ** 0.5)
                 bullets.append((self.x + self.width // 2 - BULLET_WIDTH // 2, self.y, False, True))
             return bullets
         return None
@@ -98,6 +131,8 @@ class Enemy:
             self._draw_plane(screen, x, y)
         elif self.enemy_type == 'ship':
             self._draw_ship(screen, x, y)
+        elif self.enemy_type == 'big_plane':
+            self._draw_big_plane(screen, x, y)
         else:
             self._draw_aa_gun(screen, x, y)
 
@@ -170,3 +205,64 @@ class Enemy:
 
         for i in range(3):
             pygame.draw.rect(screen, SAND, (x + 5 + i * 15, y + 35, 8, 5))
+
+    def _draw_big_plane(self, screen, x, y):
+        pygame.draw.rect(screen, DARK_GRAY, (x + 40, y + 25, 70, 65))
+        pygame.draw.rect(screen, GRAY, (x + 35, y + 30, 80, 55))
+
+        pygame.draw.polygon(screen, DARK_GRAY, [
+            (x + 75, y),
+            (x + 55, y + 30),
+            (x + 95, y + 30)
+        ])
+        pygame.draw.polygon(screen, GRAY, [
+            (x + 75, y + 5),
+            (x + 60, y + 28),
+            (x + 90, y + 28)
+        ])
+
+        pygame.draw.rect(screen, GRAY, (x, y + 45, 150, 12))
+        pygame.draw.rect(screen, DARK_GRAY, (x + 5, y + 43, 140, 16))
+        pygame.draw.rect(screen, GRAY, (x + 10, y + 44, 130, 14))
+
+        pygame.draw.rect(screen, GRAY, (x + 45, y + 75, 60, 25))
+        pygame.draw.polygon(screen, DARK_GRAY, [
+            (x + 50, y + 100),
+            (x + 65, y + 105),
+            (x + 85, y + 105),
+            (x + 100, y + 100)
+        ])
+
+        for engine_x in [x + 20, x + 110]:
+            pygame.draw.rect(screen, DARK_GRAY, (engine_x, y + 35, 18, 30))
+            pygame.draw.circle(screen, BLACK, (engine_x + 9, y + 35), 9)
+            pygame.draw.polygon(screen, ORANGE, [
+                (engine_x + 4, y + 65),
+                (engine_x + 9, y + 75),
+                (engine_x + 14, y + 65)
+            ])
+            pygame.draw.polygon(screen, YELLOW, [
+                (engine_x + 5, y + 65),
+                (engine_x + 9, y + 70),
+                (engine_x + 13, y + 65)
+            ])
+
+        for engine_x in [x + 20, x + 110]:
+            pygame.draw.rect(screen, DARK_GRAY, (engine_x, y + 60, 18, 25))
+            pygame.draw.circle(screen, BLACK, (engine_x + 9, y + 60), 9)
+            pygame.draw.polygon(screen, ORANGE, [
+                (engine_x + 4, y + 85),
+                (engine_x + 9, y + 92),
+                (engine_x + 14, y + 85)
+            ])
+            pygame.draw.polygon(screen, YELLOW, [
+                (engine_x + 5, y + 85),
+                (engine_x + 9, y + 89),
+                (engine_x + 13, y + 85)
+            ])
+
+        pygame.draw.rect(screen, (100, 149, 237), (x + 65, y + 33, 20, 12))
+        pygame.draw.rect(screen, (100, 149, 237), (x + 60, y + 48, 30, 10))
+
+        pygame.draw.rect(screen, RED, (x + 70, y + 78, 10, 20))
+        pygame.draw.rect(screen, RED, (x + 65, y + 83, 20, 10))

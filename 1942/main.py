@@ -12,7 +12,7 @@ class Menu:
     def __init__(self, screen):
         self.screen = screen
         self.selected_option = 0
-        self.options = ['NORMAL MODE', 'HARD MODE', 'QUIT']
+        self.options = ['普通模式', '困难模式', '退出游戏']
         self.font = pygame.font.Font(None, 48)
         self.small_font = pygame.font.Font(None, 24)
         self.title_font = pygame.font.Font(None, 80)
@@ -80,7 +80,7 @@ class Menu:
         title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, 80))
         self.screen.blit(title_text, title_rect)
 
-        subtitle_text = self.subtitle_font.render('PACIFIC AIR COMBAT', True, YELLOW)
+        subtitle_text = self.subtitle_font.render('太平洋空战', True, YELLOW)
         subtitle_rect = subtitle_text.get_rect(center=(SCREEN_WIDTH // 2, 130))
         self.screen.blit(subtitle_text, subtitle_rect)
 
@@ -97,23 +97,23 @@ class Menu:
                 arrow = self.font.render('<', True, YELLOW)
                 self.screen.blit(arrow, (rect.right + 20, rect.y))
 
-        hint_text = self.small_font.render('Press C for Controls', True, LIGHT_GRAY)
+        hint_text = self.small_font.render('按 C 键查看操作说明', True, LIGHT_GRAY)
         hint_rect = hint_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 60))
         self.screen.blit(hint_text, hint_rect)
 
     def _draw_controls(self):
-        controls_title = self.font.render('CONTROLS', True, YELLOW)
+        controls_title = self.font.render('操作说明', True, YELLOW)
         controls_rect = controls_title.get_rect(center=(SCREEN_WIDTH // 2, 280))
         self.screen.blit(controls_title, controls_rect)
 
         controls = [
-            ('W / UP ARROW', 'Move Up'),
-            ('S / DOWN ARROW', 'Move Down'),
-            ('A / LEFT ARROW', 'Move Left'),
-            ('D / RIGHT ARROW', 'Move Right'),
-            ('SPACE', 'Fire Machine Guns'),
-            ('B', 'Drop Bombs'),
-            ('ESC', 'Pause Game'),
+            ('W / 上箭头', '向上移动'),
+            ('S / 下箭头', '向下移动'),
+            ('A / 左箭头', '向左移动'),
+            ('D / 右箭头', '向右移动'),
+            ('空格键', '发射机枪'),
+            ('B 键', '投掷炸弹'),
+            ('ESC 键', '暂停游戏'),
         ]
 
         for i, (key, action) in enumerate(controls):
@@ -122,13 +122,14 @@ class Menu:
             self.screen.blit(key_text, (120, 330 + i * 30))
             self.screen.blit(action_text, (320, 330 + i * 30))
 
-        enemy_title = self.small_font.render('ENEMY TYPES:', True, YELLOW)
+        enemy_title = self.small_font.render('敌人类型:', True, YELLOW)
         self.screen.blit(enemy_title, (120, 550))
 
         enemies = [
-            ('Fighter Plane', 'Shoot down with machine guns (+100 pts)'),
-            ('Navy Ship', 'Destroy with bombs (+300 pts)'),
-            ('AA Gun', 'Destroy with bombs (+200 pts)'),
+            ('战斗机', '用机枪击落 (+100 分)'),
+            ('海军舰艇', '用炸弹摧毁 (+300 分)'),
+            ('防空炮', '用炸弹摧毁 (+200 分)'),
+            ('大型轰炸机', '用机枪击落 (+1000 分)'),
         ]
 
         for i, (enemy, desc) in enumerate(enemies):
@@ -137,7 +138,7 @@ class Menu:
             self.screen.blit(enemy_text, (120, 580 + i * 25))
             self.screen.blit(desc_text, (240, 580 + i * 25))
 
-        back_text = self.small_font.render('Press C to return to menu', True, LIGHT_GRAY)
+        back_text = self.small_font.render('按 C 键返回菜单', True, LIGHT_GRAY)
         back_rect = back_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 60))
         self.screen.blit(back_text, back_rect)
 
@@ -167,7 +168,7 @@ class Menu:
 def main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption('1942 - Pacific Air Combat')
+    pygame.display.set_caption('1942 - 太平洋空战')
     clock = pygame.time.Clock()
 
     menu = Menu(screen)

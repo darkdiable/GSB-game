@@ -28,6 +28,8 @@ class Game:
         self.score = 0
         self.wave = 1
         self.wave_timer = 0
+        self.big_plane_timer = 0
+        self.big_plane_spawned = False
 
     def handle_events(self, events):
         for event in events:
@@ -55,7 +57,7 @@ class Game:
 
         self.player.handle_input(keys)
         self.player.update()
-        self.background.update()
+        self.background.update(self.player.y)
 
         self.wave_timer += 16
         if self.wave_timer >= 30000:
@@ -67,6 +69,7 @@ class Game:
         for pos in aa_positions:
             self.enemies.append(Enemy(pos[0], pos[1], 'aa_gun'))
 
+        self.spawn_big_plane()
         self.spawn_enemies()
         self.update_enemies()
         self.update_bullets()
@@ -74,11 +77,30 @@ class Game:
         self.check_collisions()
         self.cleanup()
 
+    def spawn_big_plane(self):
+        self.big_plane_timer += 16
+
+        has_big_plane = any(e.enemy_type == 'big_plane' and e.active for e in self.enemies)
+        if has_big_plane:
+            self.big_plane_spawned = True
+            return
+        else:
+            if self.big_plane_spawned:
+                self.big_plane_spawned = False
+                self.big_plane_timer = 0
+
+        if self.big_plane_timer >= BIG_PLANE_SPAWN_INTERVAL:
+            self.big_plane_timer = 0
+            x = SCREEN_WIDTH // 2 - BIG_PLANE_WIDTH // 2
+            y = -BIG_PLANE_HEIGHT
+            self.enemies.append(Enemy(x, y, 'big_plane'))
+            self.big_plane_spawned = True
+
     def spawn_enemies(self):
         self.enemy_spawn_timer += 16
         if self.enemy_spawn_timer >= self.spawn_interval:
             self.enemy_spawn_timer = 0
-            active_enemies = len([e for e in self.enemies if e.active])
+            active_enemies = len([e for e in self.enemies if e.active and e.enemy_type != 'big_plane'])
             if active_enemies < self.max_enemies:
                 enemy_type = random.choice(['plane', 'plane', 'plane', 'ship'])
                 if enemy_type == 'plane':
@@ -134,20 +156,27 @@ class Game:
                                         self._add_explosion(bullet.x, bullet.y, 'small')
                                     break
                         else:
-                            if enemy.enemy_type == 'plane':
+                            if enemy.enemy_type in ['plane', 'big_plane']:
                                 if bullet.get_rect().colliderect(enemy.get_rect()):
                                     bullet.active = False
                                     if enemy.take_damage(bullet.damage):
                                         self.score += enemy.score
                                         self.enemies_killed += 1
-                                        self._add_explosion(enemy.x + enemy.width // 2, enemy.y + enemy.height // 2, 'medium')
+                                        if enemy.enemy_type == 'big_plane':
+                                            self._add_explosion(enemy.x + enemy.width // 2, enemy.y + enemy.height // 2, 'large')
+                                        else:
+                                            self._add_explosion(enemy.x + enemy.width // 2, enemy.y + enemy.height // 2, 'medium')
                                     break
 
         for enemy in self.enemies:
-            if enemy.active and enemy.enemy_type == 'plane' and enemy.get_rect().colliderect(self.player.get_rect()):
+            if enemy.active and enemy.enemy_type in ['plane', 'big_plane'] and enemy.get_rect().colliderect(self.player.get_rect()):
                 self.player.take_damage()
-                enemy.active = False
-                self._add_explosion(enemy.x + enemy.width // 2, enemy.y + enemy.height // 2, 'medium')
+                if enemy.enemy_type != 'big_plane':
+                    enemy.active = False
+                    self._add_explosion(enemy.x + enemy.width // 2, enemy.y + enemy.height // 2, 'medium')
+                else:
+                    enemy.take_damage(5)
+                    self._add_explosion(self.player.x + self.player.width // 2, self.player.y + self.player.height // 2, 'small')
 
     def _add_explosion(self, x, y, size):
         self.explosions.append({'x': x, 'y': y, 'size': size, 'timer': 500})
@@ -196,16 +225,16 @@ class Game:
                 pygame.draw.circle(self.screen, WHITE, (exp['x'], exp['y']), int(radius * 0.3))
 
     def draw_ui(self):
-        score_text = self.font.render(f'SCORE: {self.score}', True, WHITE)
+        score_text = self.font.render(f'得分: {self.score}', True, WHITE)
         self.screen.blit(score_text, (10, 10))
 
-        wave_text = self.font.render(f'WAVE: {self.wave}', True, WHITE)
+        wave_text = self.font.render(f'波次: {self.wave}', True, WHITE)
         self.screen.blit(wave_text, (10, 50))
 
-        kills_text = self.small_font.render(f'KILLS: {self.enemies_killed}', True, WHITE)
+        kills_text = self.small_font.render(f'击杀: {self.enemies_killed}', True, WHITE)
         self.screen.blit(kills_text, (10, 90))
 
-        health_text = self.font.render('HEALTH:', True, WHITE)
+        health_text = self.font.render('生命:', True, WHITE)
         self.screen.blit(health_text, (SCREEN_WIDTH - 180, 10))
         for i in range(self.player.max_health):
             color = RED if i < self.player.health else DARK_GRAY
@@ -214,7 +243,7 @@ class Game:
                 pygame.draw.rect(self.screen, WHITE, (SCREEN_WIDTH - 180 + i * 25 + 5, 50, 10, 10))
 
         mode_text = self.small_font.render(
-            f'MODE: {"HARD" if self.mode == MODE_HARD else "NORMAL"}', True, WHITE)
+            f'模式: {"困难" if self.mode == MODE_HARD else "普通"}', True, WHITE)
         self.screen.blit(mode_text, (SCREEN_WIDTH - 180, 80))
 
     def _draw_pause_screen(self):
@@ -222,11 +251,11 @@ class Game:
         overlay.fill((0, 0, 0, 128))
         self.screen.blit(overlay, (0, 0))
 
-        pause_text = self.font.render('PAUSED', True, YELLOW)
+        pause_text = self.font.render('游戏暂停', True, YELLOW)
         text_rect = pause_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 20))
         self.screen.blit(pause_text, text_rect)
 
-        hint_text = self.small_font.render('Press ESC to continue', True, WHITE)
+        hint_text = self.small_font.render('按 ESC 继续游戏', True, WHITE)
         hint_rect = hint_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 20))
         self.screen.blit(hint_text, hint_rect)
 
@@ -235,23 +264,23 @@ class Game:
         overlay.fill((0, 0, 0, 180))
         self.screen.blit(overlay, (0, 0))
 
-        game_over_text = self.font.render('MISSION FAILED', True, RED)
+        game_over_text = self.font.render('任务失败', True, RED)
         text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 80))
         self.screen.blit(game_over_text, text_rect)
 
-        score_text = self.small_font.render(f'Final Score: {self.score}', True, WHITE)
+        score_text = self.small_font.render(f'最终得分: {self.score}', True, WHITE)
         score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30))
         self.screen.blit(score_text, score_rect)
 
-        kills_text = self.small_font.render(f'Enemies Killed: {self.enemies_killed}', True, WHITE)
+        kills_text = self.small_font.render(f'击杀敌人: {self.enemies_killed}', True, WHITE)
         kills_rect = kills_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
         self.screen.blit(kills_text, kills_rect)
 
-        wave_text = self.small_font.render(f'Waves Survived: {self.wave}', True, WHITE)
+        wave_text = self.small_font.render(f'存活波次: {self.wave}', True, WHITE)
         wave_rect = wave_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 30))
         self.screen.blit(wave_text, wave_rect)
 
-        hint_text = self.small_font.render('Press R to restart or M for menu', True, YELLOW)
+        hint_text = self.small_font.render('按 R 重新开始 或 按 M 返回菜单', True, YELLOW)
         hint_rect = hint_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 80))
         self.screen.blit(hint_text, hint_rect)
 

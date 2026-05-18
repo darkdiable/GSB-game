@@ -53,24 +53,29 @@ class Background:
                 'length': random.randint(20, 50)
             })
 
-    def update(self):
-        self.scroll_y += BG_SCROLL_SPEED
+    def update(self, player_y=None):
+        scroll_speed = BG_SCROLL_SPEED
+        if player_y is not None:
+            player_factor = 1.0 + (1.0 - (player_y - 100) / (SCREEN_HEIGHT - 200)) * 0.5
+            scroll_speed *= player_factor
+
+        self.scroll_y += scroll_speed
 
         for cloud in self.clouds:
-            cloud['y'] += cloud['speed']
+            cloud['y'] += cloud['speed'] + scroll_speed * 0.3
             if cloud['y'] > SCREEN_HEIGHT + 50:
                 cloud['y'] = -50
                 cloud['x'] = random.randint(0, SCREEN_WIDTH)
 
         for island in self.islands:
-            island['y'] += BG_SCROLL_SPEED
+            island['y'] += scroll_speed
             if island['y'] > SCREEN_HEIGHT + 200:
                 island['y'] = -300
                 island['x'] = random.randint(30, SCREEN_WIDTH - island['width'] - 30)
                 island['aa_spawned'] = False
 
         for wave in self.wave_pattern:
-            wave['y'] += BG_SCROLL_SPEED
+            wave['y'] += scroll_speed
             if wave['y'] > SCREEN_HEIGHT:
                 wave['y'] = -20
                 wave['x'] = random.randint(0, SCREEN_WIDTH)
