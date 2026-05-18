@@ -528,11 +528,13 @@ class Game:
     
     def check_collisions(self):
         for missile in self.player_missiles[:]:
+            missile_removed = False
             for destroyer in self.destroyers[:]:
                 if missile.get_rect().colliderect(destroyer.get_rect()):
                     destroyer.health -= missile.damage
                     if missile in self.player_missiles:
                         self.player_missiles.remove(missile)
+                        missile_removed = True
                     self.explosions.append(Explosion(missile.x, missile.y, 20))
                     
                     if destroyer.health <= 0:
@@ -541,6 +543,21 @@ class Game:
                         self.explosions.append(Explosion(destroyer.x + destroyer.width // 2, 
                                                         destroyer.y + destroyer.height // 2, 50))
                     break
+            
+            if not missile_removed and missile in self.player_missiles:
+                for submarine in self.enemy_submarines[:]:
+                    if missile.get_rect().colliderect(submarine.get_rect()):
+                        submarine.health -= missile.damage
+                        if missile in self.player_missiles:
+                            self.player_missiles.remove(missile)
+                        self.explosions.append(Explosion(missile.x, missile.y, 20))
+                        
+                        if submarine.health <= 0:
+                            self.enemy_submarines.remove(submarine)
+                            self.score += submarine.score_value
+                            self.explosions.append(Explosion(submarine.x + submarine.width // 2, 
+                                                            submarine.y + submarine.height // 2, 40))
+                        break
         
         for torpedo in self.player_torpedoes[:]:
             for submarine in self.enemy_submarines[:]:
