@@ -18,7 +18,7 @@ class Background:
         for _ in range(8):
             self.clouds.append({
                 'x': random.randint(0, SCREEN_WIDTH),
-                'y': random.randint(-SCREEN_HEIGHT, SCREEN_HEIGHT),
+                'y': random.randint(-SCREEN_HEIGHT // 2, SCREEN_HEIGHT // 2),
                 'size': random.randint(30, 60),
                 'speed': random.uniform(0.5, 1.5)
             })
@@ -63,7 +63,7 @@ class Background:
 
         for cloud in self.clouds:
             cloud['y'] += cloud['speed'] + scroll_speed * 0.3
-            if cloud['y'] > SCREEN_HEIGHT + 50:
+            if cloud['y'] > SCREEN_HEIGHT // 2 + 50:
                 cloud['y'] = -50
                 cloud['x'] = random.randint(0, SCREEN_WIDTH)
 
