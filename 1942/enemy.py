@@ -52,7 +52,7 @@ class Enemy:
             self.dx = 0
             self.can_shoot = True
 
-    def update(self, player_x, player_y):
+    def update(self, player_x, player_y, background=None):
         if self.hit_flash > 0:
             self.hit_flash -= 1
 
@@ -62,7 +62,19 @@ class Enemy:
             if self.x <= 0 or self.x >= SCREEN_WIDTH - self.width:
                 self.dx *= -1
         elif self.enemy_type == 'ship':
-            self.x += self.dx * self.speed
+            new_x = self.x + self.dx * self.speed
+            if background is not None:
+                will_collide = False
+                ship_rect = pygame.Rect(new_x, self.y, self.width, self.height)
+                for island in background.islands:
+                    island_rect = pygame.Rect(island['x'], island['y'], island['width'], island['height'])
+                    if ship_rect.colliderect(island_rect):
+                        will_collide = True
+                        break
+                if will_collide:
+                    self.dx *= -1
+                    new_x = self.x + self.dx * self.speed
+            self.x = new_x
             if self.x <= 50 or self.x >= SCREEN_WIDTH - self.width - 50:
                 self.dx *= -1
             self.y += BG_SCROLL_SPEED

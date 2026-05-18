@@ -118,7 +118,7 @@ class Game:
     def update_enemies(self):
         for enemy in self.enemies:
             if enemy.active:
-                enemy.update(self.player.x, self.player.y)
+                enemy.update(self.player.x, self.player.y, self.background)
                 bullets = enemy.shoot(self.player.x, self.player.y)
                 if bullets:
                     for b in bullets:
