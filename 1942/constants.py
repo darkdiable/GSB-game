@@ -65,3 +65,5 @@ HARD_SPAWN_INTERVAL = 800
 HARD_MAX_ENEMIES = 10
 
 BG_SCROLL_SPEED = 2
+
+FONT_PATH = '/System/Library/Fonts/STHeiti Medium.ttc'

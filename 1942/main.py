@@ -13,10 +13,10 @@ class Menu:
         self.screen = screen
         self.selected_option = 0
         self.options = ['普通模式', '困难模式', '退出游戏']
-        self.font = pygame.font.Font(None, 48)
-        self.small_font = pygame.font.Font(None, 24)
-        self.title_font = pygame.font.Font(None, 80)
-        self.subtitle_font = pygame.font.Font(None, 32)
+        self.font = pygame.font.Font(FONT_PATH, 48)
+        self.small_font = pygame.font.Font(FONT_PATH, 24)
+        self.title_font = pygame.font.Font(FONT_PATH, 80)
+        self.subtitle_font = pygame.font.Font(FONT_PATH, 32)
         self.show_controls = False
 
     def draw(self):

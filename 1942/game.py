@@ -21,8 +21,8 @@ class Game:
         self.max_enemies = NORMAL_MAX_ENEMIES if mode == MODE_NORMAL else HARD_MAX_ENEMIES
         self.game_over = False
         self.paused = False
-        self.font = pygame.font.Font(None, 36)
-        self.small_font = pygame.font.Font(None, 24)
+        self.font = pygame.font.Font(FONT_PATH, 36)
+        self.small_font = pygame.font.Font(FONT_PATH, 24)
         self.enemies_killed = 0
         self.bombs_dropped = 0
         self.score = 0
