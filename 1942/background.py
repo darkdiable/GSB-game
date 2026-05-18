@@ -104,8 +104,8 @@ class Background:
 
     def draw(self, screen):
         self._draw_sky(screen)
-        self._draw_clouds(screen)
         self._draw_ocean(screen)
+        self._draw_clouds(screen)
         self._draw_islands(screen)
 
     def _draw_sky(self, screen):
