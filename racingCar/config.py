@@ -65,11 +65,26 @@ COLORS = {
 pygame.font.init()
 
 def get_chinese_font(size):
-    font_names = ['PingFang SC', 'Heiti SC', 'STHeiti', 'Microsoft YaHei', 'SimHei', 'Arial Unicode MS']
+    font_paths = [
+        '/System/Library/Fonts/STHeiti Medium.ttc',
+        '/System/Library/Fonts/STHeiti Light.ttc',
+    ]
+    for path in font_paths:
+        try:
+            font = pygame.font.Font(path, size)
+            test_surface = font.render('测试', True, (255, 255, 255))
+            if test_surface.get_width() > 30:
+                return font
+        except:
+            pass
+
+    font_names = ['stheitimedium', 'stheitilight', 'songti']
     for name in font_names:
         font = pygame.font.SysFont(name, size)
-        if font:
+        test_surface = font.render('测试', True, (255, 255, 255))
+        if test_surface.get_width() > 30:
             return font
+
     return pygame.font.SysFont(None, size)
 
 FONT_SMALL = get_chinese_font(20)
