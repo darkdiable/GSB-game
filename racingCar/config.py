@@ -63,6 +63,15 @@ COLORS = {
 }
 
 pygame.font.init()
-FONT_SMALL = pygame.font.SysFont('Arial', 20)
-FONT_MEDIUM = pygame.font.SysFont('Arial', 36)
-FONT_LARGE = pygame.font.SysFont('Arial', 72)
+
+def get_chinese_font(size):
+    font_names = ['PingFang SC', 'Heiti SC', 'STHeiti', 'Microsoft YaHei', 'SimHei', 'Arial Unicode MS']
+    for name in font_names:
+        font = pygame.font.SysFont(name, size)
+        if font:
+            return font
+    return pygame.font.SysFont(None, size)
+
+FONT_SMALL = get_chinese_font(20)
+FONT_MEDIUM = get_chinese_font(36)
+FONT_LARGE = get_chinese_font(72)
