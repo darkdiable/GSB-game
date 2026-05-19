@@ -36,9 +36,9 @@ class EnemyDestroyer:
         if self.depth_charge_cooldown <= 0:
             self.depth_charge_cooldown = random.randint(DEPTH_CHARGE_COOLDOWN_MIN, DEPTH_CHARGE_COOLDOWN_MAX)
             charges = []
-            for i in range(DEPTH_CHARGE_COUNT_PER_DROP):
-                offset_x = random.randint(-20, 20)
-                charges.append(DepthCharge(self.x + self.width // 2 + offset_x, self.y + self.height))
+            base_x = self.x + self.width // 2
+            charges.append(DepthCharge(base_x - 15, self.y + self.height))
+            charges.append(DepthCharge(base_x + 15, self.y + self.height))
             return charges
         return []
     
