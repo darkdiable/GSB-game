@@ -81,6 +81,8 @@ class SceneryManager:
         self.next_change_distance = SCENERY_CHANGE_DISTANCE
         self.spawn_timer = 0
         self.road_offset = 0
+        self.scenery_history = []
+        self.max_history = 6
 
     def update(self, player_speed, score):
         self.distance_traveled += player_speed
@@ -101,8 +103,22 @@ class SceneryManager:
                 self.elements.remove(element)
 
     def _change_scenery(self):
-        available = [s for s in SCENERY_TYPES if s != self.current_scenery]
-        self.current_scenery = random.choice(available)
+        scenery_counts = {}
+        for s in SCENERY_TYPES:
+            scenery_counts[s] = self.scenery_history.count(s)
+
+        min_count = min(scenery_counts.values())
+        candidates = [s for s in SCENERY_TYPES if scenery_counts[s] == min_count and s != self.current_scenery]
+
+        if not candidates:
+            candidates = [s for s in SCENERY_TYPES if s != self.current_scenery]
+
+        new_scenery = random.choice(candidates)
+        self.current_scenery = new_scenery
+
+        self.scenery_history.append(new_scenery)
+        if len(self.scenery_history) > self.max_history:
+            self.scenery_history.pop(0)
 
     def _spawn_element(self):
         side = random.choice(['left', 'right'])
@@ -168,3 +184,4 @@ class SceneryManager:
         self.next_change_distance = SCENERY_CHANGE_DISTANCE
         self.spawn_timer = 0
         self.road_offset = 0
+        self.scenery_history = []
