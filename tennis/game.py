@@ -147,34 +147,6 @@ class Game:
         if not self.ball.in_play:
             return
 
-        if self.ball.last_hit_by == 'player' and self.ball.bounce_count == 0:
-            if self.ball.z <= 0:
-                if self.ball.is_net_touched():
-                    return
-                serve_side = self.rules.get_serve_side()
-                if not self.ball.is_in_service_box('player', serve_side):
-                    self.ball.in_play = False
-                    self.rules.fault()
-                    if self.rules.violation == VIOLATIONS[1]:
-                        self.game_state = 'point_end'
-                    else:
-                        self._restart_serve()
-                    return
-
-        if self.ball.last_hit_by == 'npc' and self.ball.bounce_count == 0:
-            if self.ball.z <= 0:
-                if self.ball.is_net_touched():
-                    return
-                serve_side = self.rules.get_serve_side()
-                if not self.ball.is_in_service_box('npc', serve_side):
-                    self.ball.in_play = False
-                    self.rules.fault()
-                    if self.rules.violation == VIOLATIONS[1]:
-                        self.game_state = 'point_end'
-                    else:
-                        self._restart_serve()
-                    return
-
         if self.player.check_net_touch():
             self.ball.in_play = False
             self.rules.net_touch('player')
@@ -187,26 +159,45 @@ class Game:
             self.game_state = 'point_end'
             return
 
-        if self.ball.z <= 0 and self.ball.vz <= 0.5:
+        if self.ball.first_bounce_checked:
+            serve_side = self.rules.get_serve_side()
+            
+            if self.ball.last_hit_by == 'player':
+                in_box = self.ball.is_in_service_box('player', serve_side)
+            else:
+                in_box = self.ball.is_in_service_box('npc', serve_side)
+            
+            if not in_box:
+                self.ball.in_play = False
+                self.rules.fault()
+                if self.rules.violation == VIOLATIONS[1]:
+                    self.game_state = 'point_end'
+                else:
+                    self._restart_serve()
+                return
+            
+            self.ball.first_bounce_checked = False
+
+        if self.ball.z <= 0 and self.ball.vz <= 0.5 and self.ball.bounce_count >= 1:
             if not self.ball.is_in_court():
                 self.ball.in_play = False
-                if self.ball.bounce_count == 0 and self.ball.last_hit_by:
+                if self.ball.bounce_count >= 2 and self.ball.last_hit_by:
                     self.rules.out(self.ball.last_hit_by)
-                else:
+                elif self.ball.last_hit_by:
                     winner = 'npc' if self.ball.last_hit_by == 'player' else 'player'
                     self.rules.win_point(winner)
                 self.game_state = 'point_end'
                 return
 
-        if self.ball.last_hit_by:
+        if self.ball.last_hit_by and self.ball.bounce_count >= 2:
             expected_side = 'bottom' if self.ball.last_hit_by == 'npc' else 'top'
-            if self.ball.bounce_count == 1 and not self.ball.is_in_court(expected_side):
+            if not self.ball.is_in_court(expected_side):
                 self.ball.in_play = False
                 self.rules.out(self.ball.last_hit_by)
                 self.game_state = 'point_end'
                 return
 
-        if self.ball.bounce_count >= 2:
+        if self.ball.bounce_count >= 3:
             self.ball.in_play = False
             if self.ball.y > NET_Y:
                 self.rules.win_point('npc')

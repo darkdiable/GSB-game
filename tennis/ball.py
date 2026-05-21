@@ -19,6 +19,8 @@ class Ball:
         self.bounce_count = 0
         self.rotation = 0
         self.trail = []
+        self.first_bounce_checked = False
+        self.first_bounce_in_service_box = False
 
     def serve(self, server_x, server_y, target_x, target_y, speed=BALL_SERVE_SPEED):
         self.x = server_x
@@ -80,6 +82,10 @@ class Ball:
             self.vz = -self.vz * BALL_BOUNCE_DAMPING
             self.vx *= 0.95
             self.vy *= 0.95
+            
+            if self.bounce_count == 0 and self.last_hit_by:
+                self.first_bounce_checked = True
+            
             self.bounce_count += 1
 
             if abs(self.vz) < 1:
@@ -130,7 +136,8 @@ class Ball:
         else:
             target_side = 'bottom'
 
-        in_x = (CENTER_MARK_X - SERVICE_BOX_WIDTH < self.x < CENTER_MARK_X) if serve_side == 'left' else (CENTER_MARK_X < self.x < CENTER_MARK_X + SERVICE_BOX_WIDTH)
+        target_half = 'left' if serve_side == 'right' else 'right'
+        in_x = (CENTER_MARK_X - SERVICE_BOX_WIDTH < self.x < CENTER_MARK_X) if target_half == 'left' else (CENTER_MARK_X < self.x < CENTER_MARK_X + SERVICE_BOX_WIDTH)
         in_y = (SERVICE_LINE_TOP < self.y < NET_Y) if target_side == 'top' else (NET_Y < self.y < SERVICE_LINE_BOTTOM)
         
         return in_x and in_y
