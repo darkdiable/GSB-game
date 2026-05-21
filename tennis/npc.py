@@ -25,16 +25,16 @@ class NPC:
         self.hit_target = (CENTER_MARK_X, COURT_BOTTOM - 60)
 
         if difficulty == 'easy':
-            self.speed = NPC_SPEED * 0.8
+            self.speed = NPC_SPEED * 0.9
             self.accuracy = 0.6
             self.reaction_delay = NPC_REACTION_DELAY * 2
         elif difficulty == 'hard':
-            self.speed = NPC_SPEED * 1.1
+            self.speed = NPC_SPEED * 1.3
             self.accuracy = 0.9
             self.reaction_delay = NPC_REACTION_DELAY // 2
         else:
-            self.speed = NPC_SPEED
-            self.accuracy = 0.75
+            self.speed = NPC_SPEED * 1.15
+            self.accuracy = 0.8
             self.reaction_delay = NPC_REACTION_DELAY
 
     def reset(self):
@@ -87,34 +87,80 @@ class NPC:
         return False
 
     def _decide_action(self, ball):
-        ball_reach_y = self._predict_ball_y(ball)
-        
-        if ball_reach_y and COURT_TOP < ball_reach_y < NET_Y:
-            self.target_x = ball.x
-            self.target_y = ball_reach_y - 30
-            
-            dist = math.sqrt((self.x - ball.x) ** 2 + (self.y - ball_reach_y) ** 2)
-            self.will_hit = dist < self.size + 50 and ball.bounce_count <= 1
+        if ball.bounce_count >= 1:
+            if COURT_TOP < ball.y < NET_Y:
+                self.target_x = ball.x
+                self.target_y = ball.y
+                
+                dist = math.sqrt((self.x - ball.x) ** 2 + (self.y - ball.y) ** 2)
+                self.will_hit = dist < self.size + 100 and ball.bounce_count <= 2
+            else:
+                self.target_x = NPC_START_X
+                self.target_y = NPC_START_Y
+                self.will_hit = False
         else:
-            self.target_x = NPC_START_X
-            self.target_y = NPC_START_Y
-            self.will_hit = False
+            ball_reach_y = self._predict_ball_y(ball)
+            if ball_reach_y:
+                if ball.vy < 0:
+                    self.target_x = ball.x
+                    self.target_y = max(ball_reach_y, COURT_TOP + 60)
+                    self.will_hit = False
+                elif COURT_TOP < ball_reach_y < NET_Y:
+                    self.target_x = ball.x
+                    self.target_y = ball_reach_y - 30
+                    
+                    dist = math.sqrt((self.x - ball.x) ** 2 + (self.y - ball_reach_y) ** 2)
+                    self.will_hit = dist < self.size + 80 and ball.bounce_count <= 1
+                else:
+                    self.target_x = NPC_START_X
+                    self.target_y = NPC_START_Y
+                    self.will_hit = False
+            else:
+                self.target_x = ball.x
+                self.target_y = COURT_TOP + 100
+                self.will_hit = False
 
         if self.will_hit and self.decision_timer >= 15:
             self.decision_timer = 0
             self._choose_hit_target(ball)
 
     def _predict_ball_y(self, ball):
-        if ball.vy <= 0:
+        if abs(ball.vy) < 0.1:
             return None
         
-        time_to_reach = (self.y - ball.y) / ball.vy if ball.vy > 0 else 100
+        if ball.vy > 0:
+            time_to_reach = (self.y - ball.y) / ball.vy
+        else:
+            predicted_bounce_y = self._predict_bounce_position(ball)
+            if predicted_bounce_y is None:
+                return None
+            return predicted_bounce_y
         
-        if time_to_reach < 0 or time_to_reach > 60:
+        if time_to_reach < 0 or time_to_reach > 80:
             return None
         
         predicted_y = ball.y + ball.vy * time_to_reach
         return predicted_y
+
+    def _predict_bounce_position(self, ball):
+        if ball.vy >= 0:
+            return None
+        
+        test_y = ball.y
+        test_vy = ball.vy
+        test_z = ball.z
+        test_vz = ball.vz
+        gravity = 0.5
+        
+        for frame in range(100):
+            test_y += test_vy
+            test_z += test_vz
+            test_vz -= gravity
+            
+            if test_z <= 0 and test_vz < 0:
+                return test_y
+        
+        return None
 
     def _choose_hit_target(self, ball):
         target_options = [
@@ -166,7 +212,7 @@ class NPC:
             return
 
         dist = math.sqrt((self.x - ball.x) ** 2 + (self.y - ball.y) ** 2)
-        if dist < self.size + BALL_RADIUS + 15 and self.will_hit:
+        if dist < self.size + BALL_RADIUS + 35 and self.will_hit:
             self._hit_ball(ball)
 
     def _hit_ball(self, ball):
