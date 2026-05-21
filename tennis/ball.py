@@ -23,7 +23,7 @@ class Ball:
     def serve(self, server_x, server_y, target_x, target_y, speed=BALL_SERVE_SPEED):
         self.x = server_x
         self.y = server_y
-        self.z = 15
+        self.z = 25
         self.last_hit_by = 'player' if server_y > NET_Y else 'npc'
         
         dx = target_x - server_x
@@ -31,9 +31,24 @@ class Ball:
         dist = math.sqrt(dx * dx + dy * dy)
         
         if dist > 0:
+            gravity = 0.5
+            
+            time_to_target = dist / speed
+            
+            required_vz = (0 - self.z + 0.5 * gravity * time_to_target * time_to_target) / max(time_to_target, 0.1)
+            
+            net_y = NET_Y
+            time_to_net = abs(net_y - server_y) / max(abs(dy / dist * speed), 0.1)
+            z_at_net = self.z + required_vz * time_to_net - 0.5 * gravity * time_to_net * time_to_net
+            
+            min_z_at_net = NET_HEIGHT + 20
+            if z_at_net < min_z_at_net:
+                extra_vz = (min_z_at_net - z_at_net) / max(time_to_net, 0.1)
+                required_vz += extra_vz
+            
             self.vx = (dx / dist) * speed
             self.vy = (dy / dist) * speed
-            self.vz = 8
+            self.vz = max(8, required_vz)
         
         self.in_play = True
         self.bounce_count = 0

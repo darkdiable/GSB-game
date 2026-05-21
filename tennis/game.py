@@ -89,7 +89,7 @@ class Game:
 
     def _handle_space_release(self):
         if self.game_state == 'playing' and self.player.charging:
-            if self.player.is_near_ball(self.ball) and self.ball.in_play:
+            if self.player.is_near_ball(self.ball) and self.ball.in_play and self.ball.last_hit_by != 'player':
                 target_x, target_y = self._get_hit_target()
                 self.player.hit_ball(self.ball, target_x, target_y)
             else:
@@ -126,7 +126,11 @@ class Game:
         
         can_hit = self.game_state == 'playing'
         self.player.update(keys, self.ball, self.rules, can_hit)
-        self.npc.update(self.ball, self.rules, self.game_state)
+        
+        npc_served = self.npc.update(self.ball, self.rules, self.game_state)
+        if npc_served and self.game_state == 'serve':
+            self.game_state = 'playing'
+        
         self.ball.update()
         self.rules.update()
         self.referee.update(self.rules)

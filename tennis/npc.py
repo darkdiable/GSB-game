@@ -58,18 +58,21 @@ class NPC:
             self.hit_timer -= 1
             if self.hit_timer <= 0:
                 self.hitting = False
-            return
+            return False
 
         if game_state == 'serve' and rules.serving == 'npc' and rules.can_start_serve():
             if self.decision_timer > 60:
                 self._serve(ball, rules)
-            return
+                self.decision_timer = 0
+                return True
+            return False
 
-        if ball.in_play and ball.y < NET_Y:
+        if ball.in_play and ball.last_hit_by != 'npc':
             if self.reaction_counter >= self.reaction_delay:
                 self._decide_action(ball)
                 self._move_to_target()
-                self._check_hit(ball)
+                if ball.y < NET_Y:
+                    self._check_hit(ball)
         else:
             self._return_to_ready()
 
@@ -80,6 +83,8 @@ class NPC:
         if self.anim_timer >= 10:
             self.anim_timer = 0
             self.anim_frame = (self.anim_frame + 1) % 4
+
+        return False
 
     def _decide_action(self, ball):
         ball_reach_y = self._predict_ball_y(ball)
@@ -197,16 +202,16 @@ class NPC:
             target_x = CENTER_MARK_X - SERVICE_BOX_WIDTH // 2
         else:
             target_x = CENTER_MARK_X + SERVICE_BOX_WIDTH // 2
-        target_y = SERVICE_LINE_BOTTOM - 30
+        target_y = NET_Y + 80
         
         if random.random() > self.accuracy:
-            target_x += random.uniform(-40, 40)
+            target_x += random.uniform(-30, 30)
             target_y += random.uniform(-20, 20)
         
         self.hitting = True
         self.hit_timer = 25
         
-        ball.serve(serve_x, serve_y, target_x, target_y, BALL_SERVE_SPEED * 0.9)
+        ball.serve(serve_x, serve_y, target_x, target_y, BALL_SERVE_SPEED * 1.0)
 
     def _return_to_ready(self):
         dx = NPC_START_X - self.x
