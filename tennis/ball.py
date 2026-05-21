@@ -20,7 +20,7 @@ class Ball:
         self.rotation = 0
         self.trail = []
         self.first_bounce_checked = False
-        self.first_bounce_in_service_box = False
+        self.is_serve_rally = False
 
     def serve(self, server_x, server_y, target_x, target_y, speed=BALL_SERVE_SPEED):
         self.x = server_x
@@ -55,6 +55,8 @@ class Ball:
         self.in_play = True
         self.bounce_count = 0
         self.trail = []
+        self.is_serve_rally = True
+        self.first_bounce_checked = False
 
     def update(self):
         if not self.in_play:
@@ -105,6 +107,7 @@ class Ball:
 
     def hit(self, hitter, target_x, target_y, power=1.0):
         self.last_hit_by = hitter
+        self.is_serve_rally = False
         
         dx = target_x - self.x
         dy = target_y - self.y

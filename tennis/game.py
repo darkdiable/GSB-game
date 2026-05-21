@@ -159,7 +159,7 @@ class Game:
             self.game_state = 'point_end'
             return
 
-        if self.ball.first_bounce_checked:
+        if self.ball.first_bounce_checked and self.ball.is_serve_rally:
             serve_side = self.rules.get_serve_side()
             
             if self.ball.last_hit_by == 'player':
@@ -178,47 +178,64 @@ class Game:
             
             self.ball.first_bounce_checked = False
 
-        if self.ball.z <= 0 and self.ball.vz <= 0.5 and self.ball.bounce_count >= 1:
-            if not self.ball.is_in_court():
+        if self.ball.is_serve_rally:
+            if self.ball.bounce_count >= 2:
                 self.ball.in_play = False
-                if self.ball.bounce_count >= 2 and self.ball.last_hit_by:
+                if self.ball.last_hit_by == 'player':
+                    self.rules.win_point('player')
+                else:
+                    self.rules.win_point('npc')
+                self.game_state = 'point_end'
+                return
+
+            if self.ball.y < COURT_TOP - 50 or self.ball.y > COURT_BOTTOM + 50:
+                self.ball.in_play = False
+                if self.ball.last_hit_by == 'player':
+                    self.rules.win_point('player')
+                else:
+                    self.rules.win_point('npc')
+                self.game_state = 'point_end'
+                return
+
+            if self.ball.x < COURT_LEFT - 50 or self.ball.x > COURT_RIGHT + 50:
+                self.ball.in_play = False
+                if self.ball.last_hit_by == 'player':
+                    self.rules.win_point('player')
+                else:
+                    self.rules.win_point('npc')
+                self.game_state = 'point_end'
+                return
+        else:
+            if self.ball.z <= 0 and self.ball.vz <= 0.5 and self.ball.bounce_count >= 1:
+                if not self.ball.is_in_court():
+                    self.ball.in_play = False
+                    if self.ball.last_hit_by:
+                        self.rules.out(self.ball.last_hit_by)
+                    self.game_state = 'point_end'
+                    return
+
+            if self.ball.bounce_count >= 2:
+                self.ball.in_play = False
+                if self.ball.y > NET_Y:
+                    self.rules.win_point('npc')
+                else:
+                    self.rules.win_point('player')
+                self.game_state = 'point_end'
+                return
+
+            if self.ball.y < COURT_TOP - 50 or self.ball.y > COURT_BOTTOM + 50:
+                self.ball.in_play = False
+                if self.ball.last_hit_by:
                     self.rules.out(self.ball.last_hit_by)
-                elif self.ball.last_hit_by:
-                    winner = 'npc' if self.ball.last_hit_by == 'player' else 'player'
-                    self.rules.win_point(winner)
                 self.game_state = 'point_end'
                 return
 
-        if self.ball.last_hit_by and self.ball.bounce_count >= 2:
-            expected_side = 'bottom' if self.ball.last_hit_by == 'npc' else 'top'
-            if not self.ball.is_in_court(expected_side):
+            if self.ball.x < COURT_LEFT - 50 or self.ball.x > COURT_RIGHT + 50:
                 self.ball.in_play = False
-                self.rules.out(self.ball.last_hit_by)
+                if self.ball.last_hit_by:
+                    self.rules.out(self.ball.last_hit_by)
                 self.game_state = 'point_end'
                 return
-
-        if self.ball.bounce_count >= 3:
-            self.ball.in_play = False
-            if self.ball.y > NET_Y:
-                self.rules.win_point('npc')
-            else:
-                self.rules.win_point('player')
-            self.game_state = 'point_end'
-            return
-
-        if self.ball.y < COURT_TOP - 50 or self.ball.y > COURT_BOTTOM + 50:
-            self.ball.in_play = False
-            if self.ball.last_hit_by:
-                self.rules.out(self.ball.last_hit_by)
-            self.game_state = 'point_end'
-            return
-
-        if self.ball.x < COURT_LEFT - 50 or self.ball.x > COURT_RIGHT + 50:
-            self.ball.in_play = False
-            if self.ball.last_hit_by:
-                self.rules.out(self.ball.last_hit_by)
-            self.game_state = 'point_end'
-            return
 
     def _check_point_end(self):
         if not self.ball.in_play and self.ball.last_hit_by is None:
