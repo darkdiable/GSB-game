@@ -4,6 +4,7 @@
 import pygame
 import sys
 import math
+import os
 from typing import Tuple, List, Optional
 
 
@@ -35,6 +36,47 @@ class GameState:
     ANIMATING = "animating"       # 动画播放中
     ROUND_RESULT = "round_result" # 显示本轮结果
     GAME_OVER = "game_over"       # 游戏结束
+
+
+def get_chinese_font() -> Optional[str]:
+    """
+    查找系统中可用的中文字体
+
+    Returns:
+        Optional[str]: 中文字体名称或字体文件路径，找不到返回None
+    """
+    # 优先尝试的中文字体名称（按优先级排序）
+    font_names = [
+        'stheitimedium',      # 华文黑体 - Mac系统
+        'stheitilight',       # 华文黑体细体
+        'hiraginosansgb',   # 冬青黑体简体中文
+        'songti',           # 宋体
+        'applesdgothicneo', # Apple SD Gothic Neo
+        'kailasa',         # 藏文，但可能支持部分中文
+        'arialunicodems',      # Arial Unicode MS
+    ]
+
+    # 检查系统字体
+    available_fonts = pygame.font.get_fonts()
+    for font_name in font_names:
+        if font_name in available_fonts:
+            return font_name
+
+    # 尝试查找字体文件
+    font_files = [
+        '/Library/Fonts/Arial Unicode.ttf',
+        '/System/Library/Fonts/STHeiti Medium.ttc',
+        '/System/Library/Fonts/STHeiti Light.ttc',
+        '/System/Library/Fonts/Hiragino Sans GB.ttc',
+        '/System/Library/Fonts/PingFang.ttc',
+        '/System/Library/Fonts/AppleSDGothicNeo.ttc',
+    ]
+
+    for font_file in font_files:
+        if os.path.exists(font_file):
+            return font_file
+
+    return None
 
 
 class SoccerGUI:
@@ -71,10 +113,32 @@ class SoccerGUI:
 
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         self.clock = pygame.time.Clock()
-        self.font_large = pygame.font.SysFont("Arial", 48, bold=True)
-        self.font_medium = pygame.font.SysFont("Arial", 32, bold=True)
-        self.font_small = pygame.font.SysFont("Arial", 20)
-        self.font_tiny = pygame.font.SysFont("Arial", 16)
+
+        # 获取中文字体
+        self.chinese_font = get_chinese_font()
+        if self.chinese_font:
+            print(f"✅ 使用中文字体: {self.chinese_font}")
+            if os.path.exists(self.chinese_font):
+                # 从文件加载字体
+                self.font_large = pygame.font.Font(self.chinese_font, 48)
+                self.font_large.set_bold(True)
+                self.font_medium = pygame.font.Font(self.chinese_font, 32)
+                self.font_medium.set_bold(True)
+                self.font_small = pygame.font.Font(self.chinese_font, 20)
+                self.font_tiny = pygame.font.Font(self.chinese_font, 16)
+            else:
+                # 使用系统字体名称
+                self.font_large = pygame.font.SysFont(self.chinese_font, 48, bold=True)
+                self.font_medium = pygame.font.SysFont(self.chinese_font, 32, bold=True)
+                self.font_small = pygame.font.SysFont(self.chinese_font, 20)
+                self.font_tiny = pygame.font.SysFont(self.chinese_font, 16)
+        else:
+            # 找不到中文字体时的降级方案
+            print("⚠️  未找到中文字体，使用默认字体，可能存在乱码")
+            self.font_large = pygame.font.SysFont("Arial", 48, bold=True)
+            self.font_medium = pygame.font.SysFont("Arial", 32, bold=True)
+            self.font_small = pygame.font.SysFont("Arial", 20)
+            self.font_tiny = pygame.font.SysFont("Arial", 16)
 
         # 足球位置（用于动画）
         self.ball_start_pos = (450, 500)
