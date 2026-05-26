@@ -65,6 +65,9 @@ class PenaltyGameGUI:
         self.referee_timer = 0
         self.referee_delay = 0
 
+        # 蓄力状态
+        self.is_charging = False
+
     def _create_players(self, team_name: str, is_ai: bool) -> list:
         """创建球队球员"""
         players = []
@@ -79,11 +82,29 @@ class PenaltyGameGUI:
 
         while running:
             # 处理事件
-            running, direction, power_delta = self.gui.handle_events()
+            running, direction, power_delta, move_direction, j_key_action = self.gui.handle_events()
             if not running:
                 break
 
-            # 处理力度调整
+            # 处理球员移动
+            if self.gui.state == GameState.CHOOSE_SHOOT:
+                self.gui.update_player_position(move_direction)
+
+            # 处理J键蓄力
+            if self.gui.state == GameState.CHOOSE_SHOOT:
+                if j_key_action == 1:
+                    self.is_charging = True
+                elif j_key_action == -1 and self.is_charging:
+                    self.is_charging = False
+                    # 释放J键，射门
+                    self.shoot_power = self.gui.charge_power
+                    self._shoot()
+
+                # 更新蓄力值
+                if self.is_charging:
+                    self.gui.update_charge(True)
+
+            # 处理力度调整（保留原有的上下键支持）
             if power_delta != 0 and self.gui.state == GameState.CHOOSE_SHOOT:
                 new_power = self.gui.selected_power + power_delta
                 if 1 <= new_power <= 10:
@@ -140,11 +161,9 @@ class PenaltyGameGUI:
                     self.gui.state = GameState.CHOOSE_SAVE
 
         elif state == GameState.CHOOSE_SHOOT:
-            # 玩家选择射门方向
-            if direction and direction in Player.DIRECTIONS:
-                self.shoot_direction = direction
-                self.shoot_power = self.gui.selected_power
-                self._execute_shot()
+            # 玩家通过A/D移动，J键蓄力射门
+            # 射门逻辑已在主循环中处理
+            pass
 
         elif state == GameState.CHOOSE_SAVE:
             # 玩家选择扑救方向
@@ -182,6 +201,7 @@ class PenaltyGameGUI:
         self.computer_score = 0
         self.current_round = 0
         self.game_over = False
+        self.is_charging = False
         self.player_goalkeeper.reset_stats()
         self.computer_goalkeeper.reset_stats()
         self.referee.reset()
@@ -216,6 +236,58 @@ class PenaltyGameGUI:
         # 随机等待 1-3 秒 (60fps)
         self.referee_delay = random.randint(60, 180)
         self.gui.state = GameState.REFEREE_READY
+
+    def _calculate_shoot_direction(self) -> str:
+        """根据球员位置计算射门方向"""
+        player_x = self.gui.player_pos[0]
+
+        # 将球员位置映射到7个射门方向
+        # 球员移动范围: 300-600
+        # 方向区域中心x坐标: 左上(310), 左下(310), 正左(310), 正中(450), 正右(590), 右上(590), 右下(590)
+
+        # 根据x位置决定左右
+        if player_x < 380:
+            # 左侧区域
+            x_zone = 'left'
+        elif player_x < 520:
+            # 中间区域
+            x_zone = 'center'
+        else:
+            # 右侧区域
+            x_zone = 'right'
+
+        # 随机选择高度（上/中/下）
+        height_random = random.random()
+        if height_random < 0.33:
+            height = 'top'
+        elif height_random < 0.66:
+            height = 'middle'
+        else:
+            height = 'bottom'
+
+        # 组合方向
+        if x_zone == 'left':
+            if height == 'top':
+                return '左上'
+            elif height == 'middle':
+                return '正左'
+            else:
+                return '左下'
+        elif x_zone == 'center':
+            return '正中'
+        else:
+            if height == 'top':
+                return '右上'
+            elif height == 'middle':
+                return '正右'
+            else:
+                return '右下'
+
+    def _shoot(self):
+        """执行射门"""
+        self.shoot_direction = self._calculate_shoot_direction()
+        self.shoot_power = self.gui.charge_power
+        self._execute_shot()
 
     def _execute_shot(self):
         """执行射门"""
@@ -316,7 +388,8 @@ class PenaltyGameGUI:
             # 绘制球员
             if self.current_phase == "player_shoot":
                 # 玩家射门，电脑守门
-                self.gui.draw_player(350, 500, Colors.RED, self.shooter.name)
+                player_x = self.gui.player_pos[0] if self.gui.state == GameState.CHOOSE_SHOOT else 350
+                self.gui.draw_player(player_x, 500, Colors.RED, self.shooter.name)
                 self.gui.draw_goalkeeper(
                     self.gui.gk_pos[0],
                     self.gui.gk_pos[1],
@@ -350,15 +423,18 @@ class PenaltyGameGUI:
                 self.gui.draw_message("开始！", color=Colors.GOLD)
 
             elif state == GameState.CHOOSE_SHOOT:
-                self.gui.draw_message("选择射门方向", y_offset=-150, color=Colors.YELLOW)
-                self.gui.draw_sub_message("↑↓调整力度，点击球门选择方向", y_offset=-100)
-                self.gui.draw_direction_zones(highlight=None)
-                self.gui.draw_power_meter(self.gui.selected_power)
+                self.gui.draw_message("准备射门", y_offset=-150, color=Colors.YELLOW)
+                self.gui.draw_sub_message("A/D键左右移动，按住J键蓄力，松开射门", y_offset=-100)
+                # 显示蓄力条
+                self.gui.draw_charge_meter(self.gui.charge_power if self.is_charging else 0, self.is_charging)
                 # 显示当前射门球员
                 self.gui.draw_sub_message(
                     f"射门球员: {self.shooter.name}",
                     y_offset=100
                 )
+                # 显示球员位置指示
+                pos_text = f"位置: {int(self.gui.player_pos[0])}"
+                self.gui.draw_sub_message(pos_text, y_offset=130)
 
             elif state == GameState.CHOOSE_SAVE:
                 self.gui.draw_message("选择扑救方向", y_offset=-150, color=Colors.YELLOW)

@@ -161,6 +161,18 @@ class SoccerGUI:
         # 动画回调
         self.animation_complete_callback = None
 
+        # 球员位置（用于移动控制）
+        self.player_pos = list(self.ball_start_pos)
+        self.player_min_x = 300
+        self.player_max_x = 600
+        self.player_move_speed = 5
+
+        # 蓄力相关
+        self.is_charging = False
+        self.charge_start_time = 0
+        self.charge_power = 0
+        self.max_charge_time = 2000
+
     def draw_field(self):
         """绘制足球场"""
         # 草坪底色
@@ -473,6 +485,77 @@ class SoccerGUI:
         )
         self.screen.blit(power_text, power_rect)
 
+    def draw_charge_meter(self, power: int, is_charging: bool):
+        """绘制蓄力条"""
+        meter_x = 50
+        meter_y = 250
+        meter_width = 40
+        meter_height = 250
+
+        # 背景
+        pygame.draw.rect(
+            self.screen,
+            Colors.BLACK,
+            (meter_x - 3, meter_y - 3, meter_width + 6, meter_height + 6)
+        )
+        pygame.draw.rect(
+            self.screen,
+            Colors.LIGHT_GRAY,
+            (meter_x, meter_y, meter_width, meter_height)
+        )
+
+        # 力度填充
+        fill_height = int((power / 10) * meter_height)
+        if power >= 8:
+            color = Colors.RED
+        elif power >= 5:
+            color = Colors.YELLOW
+        else:
+            color = Colors.GREEN
+
+        pygame.draw.rect(
+            self.screen,
+            color,
+            (meter_x, meter_y + meter_height - fill_height,
+             meter_width, fill_height)
+        )
+
+        # 蓄力动画效果
+        if is_charging:
+            # 闪烁边框
+            if pygame.time.get_ticks() % 200 < 100:
+                pygame.draw.rect(
+                    self.screen,
+                    Colors.GOLD,
+                    (meter_x - 3, meter_y - 3, meter_width + 6, meter_height + 6),
+                    3
+                )
+
+        # 刻度
+        for i in range(0, 11, 2):
+            y_pos = meter_y + meter_height - int((i / 10) * meter_height)
+            pygame.draw.line(
+                self.screen,
+                Colors.BLACK,
+                (meter_x - 8, y_pos),
+                (meter_x, y_pos),
+                2
+            )
+            text = self.font_tiny.render(str(i), True, Colors.BLACK)
+            self.screen.blit(text, (meter_x - 30, y_pos - 8))
+
+        # 标签
+        label = self.font_small.render("蓄力", True, Colors.WHITE)
+        label_rect = label.get_rect(center=(meter_x + meter_width // 2, meter_y - 30))
+        self.screen.blit(label, label_rect)
+
+        # 当前力度值
+        power_text = self.font_medium.render(str(power), True, Colors.WHITE)
+        power_rect = power_text.get_rect(
+            center=(meter_x + meter_width // 2, meter_y + meter_height + 35)
+        )
+        self.screen.blit(power_text, power_rect)
+
     def draw_scoreboard(
         self,
         player_score: int,
@@ -574,8 +657,8 @@ class SoccerGUI:
             "1. 每队各有5名球员轮流射门",
             "2. 每队各有一名守门员轮流守门",
             "3. 裁判头顶显示'开始'后才能射门",
-            "4. 点击球门区域选择射门/扑救方向",
-            "5. 按 ↑↓ 键调整射门力度",
+            "4. 玩家射门: A/D键左右移动，按住J键蓄力，松开射门",
+            "5. 玩家守门: 点击球门区域选择扑救方向",
             "6. 进球多的队伍获胜",
         ]
 
@@ -707,35 +790,73 @@ class SoccerGUI:
         """重置球和守门员位置"""
         self.ball_pos = list(self.ball_start_pos)
         self.gk_pos = list(self.gk_start_pos)
+        self.player_pos = list(self.ball_start_pos)
         self.ball_target_pos = None
         self.gk_target_pos = None
+        self.is_charging = False
+        self.charge_power = 0
 
-    def handle_events(self) -> Tuple[bool, Optional[str], Optional[int]]:
+    def update_player_position(self, move_direction: int):
+        """更新球员位置"""
+        if move_direction != 0:
+            new_x = self.player_pos[0] + move_direction * self.player_move_speed
+            new_x = max(self.player_min_x, min(self.player_max_x, new_x))
+            self.player_pos[0] = new_x
+            # 球跟着球员移动
+            self.ball_pos[0] = new_x
+
+    def update_charge(self, is_charging: bool) -> int:
+        """更新蓄力值，返回当前蓄力值(1-10)"""
+        if is_charging:
+            if not self.is_charging:
+                self.is_charging = True
+                self.charge_start_time = pygame.time.get_ticks()
+                self.charge_power = 1
+            else:
+                elapsed = pygame.time.get_ticks() - self.charge_start_time
+                self.charge_power = min(10, max(1, int(elapsed / self.max_charge_time * 10)))
+        else:
+            self.is_charging = False
+        return self.charge_power
+
+    def handle_events(self) -> Tuple[bool, Optional[str], Optional[int], int, int]:
         """
         处理事件
 
         Returns:
-            Tuple[bool, Optional[str], Optional[int]]:
-                (是否应该继续运行, 选择的方向, 调整的力度)
+            Tuple[bool, Optional[str], Optional[int], int, int]:
+                (是否应该继续运行, 选择的方向/特殊按键, 调整的力度, 移动方向, J键状态: 1=按下, -1=释放, 0=无)
         """
         direction = None
         power_delta = 0
+        move_direction = 0
+        j_key_action = 0
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return False, None, None
+                return False, None, None, 0, 0
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return False, None, None
+                    return False, None, None, 0, 0
                 elif event.key == pygame.K_SPACE:
                     direction = "SPACE"
-                elif event.key == pygame.K_UP:
-                    power_delta = 1
-                elif event.key == pygame.K_DOWN:
-                    power_delta = -1
                 elif event.key == pygame.K_RETURN:
                     direction = "ENTER"
+                elif event.key == pygame.K_a:
+                    move_direction = -1
+                elif event.key == pygame.K_d:
+                    move_direction = 1
+                elif event.key == pygame.K_j:
+                    j_key_action = 1
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_a:
+                    move_direction = 0
+                elif event.key == pygame.K_d:
+                    move_direction = 0
+                elif event.key == pygame.K_j:
+                    j_key_action = -1
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_pos = pygame.mouse.get_pos()
@@ -743,7 +864,14 @@ class SoccerGUI:
                 if direction is None:
                     direction = "CLICK"
 
-        return True, direction, power_delta
+        # 检查持续按住的键
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_a]:
+            move_direction = -1
+        elif keys[pygame.K_d]:
+            move_direction = 1
+
+        return True, direction, power_delta, move_direction, j_key_action
 
     def render(self):
         """渲染当前帧"""
