@@ -1,0 +1,90 @@
+# -*- coding: utf-8 -*-
+"""
+常量配置文件 - 定义游戏中使用的所有常量
+"""
+
+# 窗口设置
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+FPS = 60
+WINDOW_TITLE = "Super Mario"
+
+# 颜色定义 (RGB)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (220, 20, 60)
+GREEN = (34, 139, 34)
+BLUE = (65, 105, 225)
+YELLOW = (255, 215, 0)
+BROWN = (139, 69, 19)
+GRAY = (128, 128, 128)
+ORANGE = (255, 165, 0)
+SKY_BLUE = (135, 206, 235)
+DARK_GREEN = (0, 100, 0)
+DARK_RED = (139, 0, 0)
+
+# 玩家设置
+PLAYER_WIDTH = 32
+PLAYER_HEIGHT = 48
+PLAYER_SPEED = 5
+PLAYER_JUMP_FORCE = -15
+GRAVITY = 0.8
+MAX_FALL_SPEED = 15
+
+# 玩家初始位置
+PLAYER_START_X = 100
+PLAYER_START_Y = 400
+
+# 生命值
+PLAYER_MAX_LIVES = 3
+INVINCIBLE_TIME = 2000  # 无敌时间（毫秒）
+
+# 游戏状态
+STATE_MENU = 0
+STATE_PLAYING = 1
+STATE_GAME_OVER = 2
+STATE_WIN = 3
+
+# 方块尺寸
+TILE_SIZE = 40
+
+# 关卡设置
+LEVEL_WIDTH = 3200  # 关卡总宽度（支持卷轴）
+LEVEL_HEIGHT = SCREEN_HEIGHT
+
+# 实体类型
+TYPE_GROUND = 'ground'
+TYPE_BRICK = 'brick'
+TYPE_QUESTION = 'question'
+TYPE_PIPE = 'pipe'
+TYPE_COIN = 'coin'
+TYPE_ENEMY = 'enemy'
+
+# 金币分数
+COIN_SCORE = 100
+
+# 敌人设置
+ENEMY_WIDTH = 36
+ENEMY_HEIGHT = 36
+ENEMY_SPEED = 2
+
+# 砖块设置
+BRICK_SIZE = 40
+QUESTION_SIZE = 40
+
+# 管道设置
+PIPE_WIDTH = 80
+PIPE_HEIGHT = 80
+
+# 金币设置
+COIN_SIZE = 24
+
+# 分数显示位置
+SCORE_X = 20
+SCORE_Y = 20
+LIVES_X = SCREEN_WIDTH - 150
+LIVES_Y = 20
+
+# 按钮设置
+BUTTON_WIDTH = 200
+BUTTON_HEIGHT = 50
