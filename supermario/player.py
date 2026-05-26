@@ -205,10 +205,12 @@ class Player:
                     self.y = platform.rect.top - self.height
                     self.velocity_y = 0
                     self.on_ground = True
+                    self.rect.y = int(self.y)
                 elif self.velocity_y < 0:
                     # 从下方顶到
                     self.y = platform.rect.bottom
                     self.velocity_y = 0
+                    self.rect.y = int(self.y)
 
                     # 检查是否顶到砖块或问号方块
                     if platform.entity_type == TYPE_BRICK:
@@ -216,7 +218,8 @@ class Player:
                     elif platform.entity_type == TYPE_QUESTION:
                         hit_info = {'type': 'question', 'object': platform}
 
-                self.rect.y = int(self.y)
+                    # 顶到方块后立即返回，避免继续检测导致多次碰撞
+                    return hit_info
 
         return hit_info
 
