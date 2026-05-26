@@ -84,9 +84,20 @@ def draw_text(screen, text, x, y, size=36, color=BLACK, font_type=None):
         font_type: 字体类型（None时使用系统中文字体）
     """
     if font_type is None:
-        # 使用系统中文字体
-        chinese_fonts = ['PingFang SC', 'Heiti SC', 'STHeiti', 'Arial Unicode MS', 'SimHei']
-        font = pygame.font.SysFont(chinese_fonts, size)
+        # 使用系统中文字体（按优先级排序）
+        chinese_fonts = ['stheitimedium', 'stheitilight', 'songti', 'arialunicode', 'Arial Unicode MS']
+        font = None
+        for font_name in chinese_fonts:
+            try:
+                font = pygame.font.SysFont(font_name, size)
+                # 测试字体是否能正确渲染
+                test_surface = font.render('测试', True, color)
+                if test_surface.get_width() > 0:
+                    break
+            except:
+                continue
+        if font is None:
+            font = pygame.font.SysFont('arial', size)
     else:
         font = pygame.font.Font(font_type, size)
     text_surface = font.render(text, True, color)
