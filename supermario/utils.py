@@ -81,9 +81,14 @@ def draw_text(screen, text, x, y, size=36, color=BLACK, font_type=None):
         x, y: 位置坐标
         size: 字体大小
         color: 字体颜色
-        font_type: 字体类型
+        font_type: 字体类型（None时使用系统中文字体）
     """
-    font = pygame.font.Font(font_type, size)
+    if font_type is None:
+        # 使用系统中文字体
+        chinese_fonts = ['PingFang SC', 'Heiti SC', 'STHeiti', 'Arial Unicode MS', 'SimHei']
+        font = pygame.font.SysFont(chinese_fonts, size)
+    else:
+        font = pygame.font.Font(font_type, size)
     text_surface = font.render(text, True, color)
     screen.blit(text_surface, (x, y))
 
