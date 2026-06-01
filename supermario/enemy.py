@@ -151,10 +151,10 @@ class Enemy:
         pygame.draw.ellipse(surf, LIGHT_BROWN, (2, self.height - 14, self.width - 4, 12))
 
         # X 眼睛
-        pygame.draw.line(surf, BLACK, (8, self.height - 10, 12, self.height - 6), 2)
-        pygame.draw.line(surf, BLACK, (12, self.height - 10, 8, self.height - 6), 2)
-        pygame.draw.line(surf, BLACK, (20, self.height - 10, 24, self.height - 6), 2)
-        pygame.draw.line(surf, BLACK, (24, self.height - 10, 20, self.height - 6), 2)
+        pygame.draw.line(surf, BLACK, (8, self.height - 10), (12, self.height - 6), 2)
+        pygame.draw.line(surf, BLACK, (12, self.height - 10), (8, self.height - 6), 2)
+        pygame.draw.line(surf, BLACK, (20, self.height - 10), (24, self.height - 6), 2)
+        pygame.draw.line(surf, BLACK, (24, self.height - 10), (20, self.height - 6), 2)
 
         surf.set_alpha(alpha)
         screen.blit(surf, (x, y))
