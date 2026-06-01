@@ -84,7 +84,9 @@ class Game:
             return
 
         self.pacman.update(self.maze)
-        self._check_dot_collision()
+
+        if self.pacman._is_centered():
+            self._check_dot_collision()
 
         for ghost in self.ghosts:
             ghost.update(self.maze, self.pacman, delta_time)

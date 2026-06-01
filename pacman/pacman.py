@@ -44,32 +44,36 @@ class Pacman:
         if not self.alive:
             return
 
-        if self.next_direction != STOP and self._can_move(maze, self.next_direction):
-            if self._is_centered():
+        if self._is_centered():
+            if self.next_direction != STOP and self._can_move(maze, self.next_direction):
                 self.direction = self.next_direction
 
-        if self._is_centered() and not self._can_move(maze, self.direction):
-            self.direction = STOP
+            if not self._can_move(maze, self.direction):
+                self.direction = STOP
+
+            self.grid_x = int(self.x // CELL_SIZE)
+            self.grid_y = int(self.y // CELL_SIZE)
+
+        if self.direction == STOP:
+            self._animate_mouth()
             return
 
         dx, dy = self.direction
         self.x += dx * self.speed
         self.y += dy * self.speed
 
-        if self.x < 0:
-            self.x = GRID_WIDTH * CELL_SIZE
-        elif self.x > GRID_WIDTH * CELL_SIZE:
-            self.x = 0
-
-        if self._is_centered():
-            self.grid_x = round(self.x / CELL_SIZE - 0.5)
-            self.grid_y = round(self.y / CELL_SIZE - 0.5)
+        if self.x < -CELL_SIZE // 2:
+            self.x = GRID_WIDTH * CELL_SIZE + CELL_SIZE // 2
+        elif self.x > GRID_WIDTH * CELL_SIZE + CELL_SIZE // 2:
+            self.x = -CELL_SIZE // 2
 
         self._animate_mouth()
 
     def _is_centered(self):
-        center_x = self.grid_x * CELL_SIZE + CELL_SIZE // 2
-        center_y = self.grid_y * CELL_SIZE + CELL_SIZE // 2
+        grid_x = int(self.x // CELL_SIZE)
+        grid_y = int(self.y // CELL_SIZE)
+        center_x = grid_x * CELL_SIZE + CELL_SIZE // 2
+        center_y = grid_y * CELL_SIZE + CELL_SIZE // 2
         tolerance = self.speed
         return (abs(self.x - center_x) <= tolerance and
                 abs(self.y - center_y) <= tolerance)

@@ -143,6 +143,10 @@ class Ghost:
                 self.vulnerable = False
                 self.in_house = True
                 self.house_timer = 0
+                self.x = self.start_x * CELL_SIZE + CELL_SIZE // 2
+                self.y = self.start_y * CELL_SIZE + CELL_SIZE // 2
+                self.grid_x = self.start_x
+                self.grid_y = self.start_y
 
         if self.in_house:
             self.house_timer += delta_time
@@ -157,24 +161,24 @@ class Ghost:
             if not self.in_house:
                 self.direction = self._choose_direction(maze, pacman)
             self.eye_direction = self.direction
+            self.grid_x = int(self.x // CELL_SIZE)
+            self.grid_y = int(self.y // CELL_SIZE)
 
         dx, dy = self.direction
         speed = self.speed if not self.eaten else self.speed * 2
         self.x += dx * speed
         self.y += dy * speed
 
-        if self.x < 0:
-            self.x = GRID_WIDTH * CELL_SIZE
-        elif self.x > GRID_WIDTH * CELL_SIZE:
-            self.x = 0
-
-        if self._is_centered():
-            self.grid_x = round(self.x / CELL_SIZE - 0.5)
-            self.grid_y = round(self.y / CELL_SIZE - 0.5)
+        if self.x < -CELL_SIZE // 2:
+            self.x = GRID_WIDTH * CELL_SIZE + CELL_SIZE // 2
+        elif self.x > GRID_WIDTH * CELL_SIZE + CELL_SIZE // 2:
+            self.x = -CELL_SIZE // 2
 
     def _is_centered(self):
-        center_x = self.grid_x * CELL_SIZE + CELL_SIZE // 2
-        center_y = self.grid_y * CELL_SIZE + CELL_SIZE // 2
+        grid_x = int(self.x // CELL_SIZE)
+        grid_y = int(self.y // CELL_SIZE)
+        center_x = grid_x * CELL_SIZE + CELL_SIZE // 2
+        center_y = grid_y * CELL_SIZE + CELL_SIZE // 2
         tolerance = self.speed
         return (abs(self.x - center_x) <= tolerance and
                 abs(self.y - center_y) <= tolerance)
