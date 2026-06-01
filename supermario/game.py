@@ -226,7 +226,11 @@ class Game:
         progress_text = self.small_font.render(f'{progress}%', True, WHITE)
         self.screen.blit(progress_text, (SCREEN_WIDTH // 2 + 110, 25))
 
-        controls_text = self.small_font.render('←→移动  空格跳跃  ESC暂停', True, LIGHT_GRAY)
+        if self.player.is_running:
+            run_text = self.small_font.render('⚡ 助跑中', True, YELLOW)
+            self.screen.blit(run_text, (20, SCREEN_HEIGHT - 50))
+        
+        controls_text = self.small_font.render('←→移动  空格跳跃  J/Shift助跑  ESC暂停', True, LIGHT_GRAY)
         self.screen.blit(controls_text, (20, SCREEN_HEIGHT - 30))
 
     def _draw_heart(self, x, y, color):

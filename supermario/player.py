@@ -29,6 +29,7 @@ class Player:
         self.walk_animation = 0
         self.is_dead = False
         self.death_timer = 0
+        self.is_running = False
 
     def handle_input(self, keys):
         """处理键盘输入"""
@@ -36,17 +37,24 @@ class Player:
             return
 
         self.vel_x = 0
+        self.is_running = False
+
+        current_speed = PLAYER_SPEED
+        if keys[pygame.K_j] or keys[pygame.K_LSHIFT]:
+            current_speed = PLAYER_RUN_SPEED
+            self.is_running = True
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.vel_x = -self.speed
+            self.vel_x = -current_speed
             self.facing_right = False
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.vel_x = self.speed
+            self.vel_x = current_speed
             self.facing_right = True
 
         if (keys[pygame.K_SPACE] or keys[pygame.K_UP] or keys[pygame.K_w]):
             if self.is_grounded:
-                self.vel_y = self.jump_force
+                jump_force = RUN_JUMP_FORCE if self.is_running else JUMP_FORCE
+                self.vel_y = jump_force
                 self.is_grounded = False
 
     def update(self, solids, level):
@@ -66,7 +74,8 @@ class Player:
                 self.invincible = False
 
         if self.vel_x != 0:
-            self.walk_animation = (self.walk_animation + 1) % 20
+            anim_speed = 2 if self.is_running else 1
+            self.walk_animation = (self.walk_animation + anim_speed) % 20
         else:
             self.walk_animation = 0
 
