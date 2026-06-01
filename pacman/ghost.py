@@ -36,9 +36,18 @@ class Ghost:
         self.vulnerable = False
         self.vulnerable_timer = 0
         self.eaten = False
-        self.in_house = (self.ghost_type != 'blinky')
-        self.house_timer = 0
         self.eye_direction = self.direction
+
+        delay_map = {
+            'blinky': 0,
+            'pinky': 500,
+            'inky': 1500,
+            'clyde': 2500,
+            'slimy': 3500,
+            'spooky': 4500
+        }
+        self.house_timer = -delay_map.get(self.ghost_type, 0)
+        self.in_house = (self.house_timer < 0)
 
     def _get_random_direction(self):
         directions = [UP, DOWN, LEFT, RIGHT]
@@ -144,7 +153,7 @@ class Ghost:
                 self.eaten = False
                 self.vulnerable = False
                 self.in_house = True
-                self.house_timer = 0
+                self.house_timer = -2000
                 self.x = self.start_x * CELL_SIZE + CELL_SIZE // 2
                 self.y = self.start_y * CELL_SIZE + CELL_SIZE // 2
                 self.grid_x = self.start_x
@@ -152,12 +161,13 @@ class Ghost:
 
         if self.in_house:
             self.house_timer += delta_time
-            if self.house_timer > 3000:
-                if self.grid_y > 12:
-                    self.direction = UP
-                else:
-                    self.in_house = False
-                    self.direction = self._choose_direction(maze, pacman)
+            if self.house_timer < 0:
+                self.direction = STOP
+            elif self.grid_y > 12:
+                self.direction = UP
+            else:
+                self.in_house = False
+                self.direction = self._choose_direction(maze, pacman)
 
         if self._is_centered():
             if not self.in_house:
@@ -166,10 +176,11 @@ class Ghost:
             self.grid_x = int(self.x // CELL_SIZE)
             self.grid_y = int(self.y // CELL_SIZE)
 
-        dx, dy = self.direction
-        speed = self.speed if not self.eaten else self.speed * 2
-        self.x += dx * speed
-        self.y += dy * speed
+        if self.house_timer >= 0 or not self.in_house:
+            dx, dy = self.direction
+            speed = self.speed if not self.eaten else self.speed * 2
+            self.x += dx * speed
+            self.y += dy * speed
 
         if self.x < -CELL_SIZE // 2:
             self.x = GRID_WIDTH * CELL_SIZE + CELL_SIZE // 2
