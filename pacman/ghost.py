@@ -5,7 +5,7 @@ from constants import (
     CELL_SIZE, GRID_WIDTH, GRID_HEIGHT,
     GHOST_SPEED, GHOST_HOUSE,
     UP, DOWN, LEFT, RIGHT, STOP,
-    RED, PINK, CYAN, ORANGE, BLUE, WHITE,
+    RED, PINK, CYAN, ORANGE, GREEN, PURPLE, BLUE, WHITE,
     POWER_DURATION
 )
 
@@ -19,7 +19,9 @@ class Ghost:
             'blinky': RED,
             'pinky': PINK,
             'inky': CYAN,
-            'clyde': ORANGE
+            'clyde': ORANGE,
+            'slimy': GREEN,
+            'spooky': PURPLE
         }
         self.reset()
 

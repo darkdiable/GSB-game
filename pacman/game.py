@@ -26,7 +26,9 @@ class Game:
             Ghost('blinky', 13, 11),
             Ghost('pinky', 12, 14),
             Ghost('inky', 14, 14),
-            Ghost('clyde', 13, 14)
+            Ghost('clyde', 13, 14),
+            Ghost('slimy', 11, 14),
+            Ghost('spooky', 15, 14)
         ]
 
         self.score = 0
@@ -137,7 +139,9 @@ class Game:
             Ghost('blinky', 13, 11),
             Ghost('pinky', 12, 14),
             Ghost('inky', 14, 14),
-            Ghost('clyde', 13, 14)
+            Ghost('clyde', 13, 14),
+            Ghost('slimy', 11, 14),
+            Ghost('spooky', 15, 14)
         ]
         self.score = 0
         self.lives = 3
@@ -177,23 +181,25 @@ class Game:
         score_text = self.font.render(f"SCORE: {self.score}", True, WHITE)
         high_score_text = self.font.render(f"HIGH: {self.high_score}", True, WHITE)
         level_text = self.font.render(f"LEVEL: {self.level}", True, WHITE)
-        lives_text = self.font.render(f"LIVES: {self.lives}", True, WHITE)
 
         self.screen.blit(score_text, (20, GRID_HEIGHT * CELL_SIZE + 15))
         self.screen.blit(high_score_text, (220, GRID_HEIGHT * CELL_SIZE + 15))
         self.screen.blit(level_text, (460, GRID_HEIGHT * CELL_SIZE + 15))
-        self.screen.blit(lives_text, (660, GRID_HEIGHT * CELL_SIZE + 15))
+
+        lives_label = self.font.render("LIVES:", True, WHITE)
+        label_x = SCREEN_WIDTH - 180
+        self.screen.blit(lives_label, (label_x, 15))
 
         for i in range(self.lives):
-            mini_x = 780 + i * 35
-            mini_y = GRID_HEIGHT * CELL_SIZE + 30
-            pygame.draw.circle(self.screen, YELLOW, (mini_x, mini_y), 10)
+            mini_x = SCREEN_WIDTH - 80 + i * 35
+            mini_y = 30
+            pygame.draw.circle(self.screen, YELLOW, (mini_x, mini_y), 12)
             pygame.draw.polygon(
                 self.screen, BLACK,
                 [
                     (mini_x, mini_y),
-                    (mini_x + 10, mini_y - 5),
-                    (mini_x + 10, mini_y + 5)
+                    (mini_x + 12, mini_y - 6),
+                    (mini_x + 12, mini_y + 6)
                 ]
             )
 
