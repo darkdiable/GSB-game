@@ -95,7 +95,7 @@ class Coin:
                 screen.blit(score_text, score_rect)
         else:
             # 正常绘制 - 带旋转压扁效果
-            scale_x = abs(pygame.math.cos(self.rotation_angle * pygame.math.pi / 180))
+            scale_x = abs(math.cos(self.rotation_angle * math.pi / 180))
             current_width = max(4, int(self.width * scale_x))
             offset_x = (self.width - current_width) // 2
 
