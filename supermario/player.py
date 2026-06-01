@@ -107,6 +107,9 @@ class Player:
         player_rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.is_grounded = False
 
+        if self.vel_y < 0:
+            self._check_head_hit(level)
+
         for solid in solids:
             if player_rect.colliderect(solid):
                 if self.vel_y > 0:
@@ -116,17 +119,20 @@ class Player:
                 elif self.vel_y < 0:
                     self.y = solid.bottom
                     self.vel_y = 0
-                    self._check_head_hit(level)
                 player_rect.y = self.y
 
     def _check_head_hit(self, level):
-        """检测头顶碰撞砖块"""
-        player_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        """检测头顶碰撞砖块，优先检测问号砖"""
         bricks = level.get_bricks()
+        next_y = self.y + self.vel_y
+        head_rect = pygame.Rect(self.x, next_y, self.width, abs(self.vel_y) + 2)
 
-        for brick in bricks:
+        question_bricks = [b for b in bricks if hasattr(b, 'used')]
+        normal_bricks = [b for b in bricks if not hasattr(b, 'used')]
+        
+        for brick in question_bricks + normal_bricks:
             brick_rect = brick.get_rect()
-            if player_rect.colliderect(brick_rect):
+            if head_rect.colliderect(brick_rect):
                 if hasattr(brick, 'used'):
                     if brick.hit():
                         from items import Coin
