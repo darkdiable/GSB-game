@@ -14,11 +14,27 @@ class Game:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        pygame.display.set_caption("Racing Car")
+        pygame.display.set_caption("赛车游戏")
         self.clock = pygame.time.Clock()
-        self.font_large = pygame.font.SysFont("Arial", 48, bold=True)
-        self.font_medium = pygame.font.SysFont("Arial", 28)
-        self.font_small = pygame.font.SysFont("Arial", 20)
+
+        font_candidates = [
+            "Hiragino Sans GB", "PingFang SC", "Heiti SC", "STHeiti",
+            "SimHei", "Microsoft YaHei", "Arial Unicode MS",
+            "WenQuanYi Micro Hei", "Noto Sans CJK SC",
+        ]
+        self.chinese_font = None
+        for name in font_candidates:
+            f = pygame.font.SysFont(name, 28)
+            test_surf = f.render("测", True, (255, 255, 255))
+            if test_surf.get_width() > 14:
+                self.chinese_font = name
+                break
+        if self.chinese_font is None:
+            self.chinese_font = None
+
+        self.font_large = pygame.font.SysFont(self.chinese_font, 48, bold=True)
+        self.font_medium = pygame.font.SysFont(self.chinese_font, 28)
+        self.font_small = pygame.font.SysFont(self.chinese_font, 20)
 
         self.player = Player()
         self.spawner = VehicleSpawner()
@@ -112,13 +128,13 @@ class Game:
         self._draw_hud()
 
     def _draw_hud(self):
-        speed_text = self.font_small.render(f"Speed: {self.player.speed:.1f} km/h", True, WHITE)
+        speed_text = self.font_small.render(f"速度: {self.player.speed:.1f} km/h", True, WHITE)
         self.screen.blit(speed_text, (10, 10))
 
-        score_text = self.font_small.render(f"Score: {self.score}", True, WHITE)
+        score_text = self.font_small.render(f"得分: {self.score}", True, WHITE)
         self.screen.blit(score_text, (10, 35))
 
-        collision_text = self.font_small.render(f"Collisions: {self.collisions}/{MAX_COLLISIONS}", True, WHITE)
+        collision_text = self.font_small.render(f"碰撞: {self.collisions}/{MAX_COLLISIONS}", True, WHITE)
         self.screen.blit(collision_text, (10, 60))
 
         bar_x = 10
@@ -150,27 +166,27 @@ class Game:
     def _draw_menu(self):
         self.screen.fill((20, 20, 40))
 
-        title = self.font_large.render("RACING CAR", True, RED)
+        title = self.font_large.render("赛车游戏", True, RED)
         title_rect = title.get_rect(center=(SCREEN_WIDTH // 2, 120))
         self.screen.blit(title, title_rect)
 
-        subtitle = self.font_medium.render("Road Adventure", True, YELLOW)
+        subtitle = self.font_medium.render("公路冒险", True, YELLOW)
         sub_rect = subtitle.get_rect(center=(SCREEN_WIDTH // 2, 170))
         self.screen.blit(subtitle, sub_rect)
 
         instructions = [
-            "W - Accelerate",
-            "S - Brake / Decelerate",
-            "A - Move Left",
-            "D - Move Right",
-            f"Avoid vehicles & obstacles! {MAX_COLLISIONS} hits = Game Over",
+            "W - 加速",
+            "S - 刹车 / 减速（长按可刹停）",
+            "A - 左移",
+            "D - 右移",
+            f"躲避车辆和障碍物！碰撞 {MAX_COLLISIONS} 次则游戏结束",
         ]
         for i, text in enumerate(instructions):
             surf = self.font_small.render(text, True, WHITE)
             rect = surf.get_rect(center=(SCREEN_WIDTH // 2, 260 + i * 35))
             self.screen.blit(surf, rect)
 
-        start_text = self.font_medium.render("Press ENTER to Start", True, GREEN)
+        start_text = self.font_medium.render("按 回车键 开始游戏", True, GREEN)
         start_rect = start_text.get_rect(center=(SCREEN_WIDTH // 2, 480))
         if (pygame.time.get_ticks() // 500) % 2 == 0:
             self.screen.blit(start_text, start_rect)
@@ -185,20 +201,20 @@ class Game:
         overlay.fill((0, 0, 0, 150))
         self.screen.blit(overlay, (0, 0))
 
-        go_text = self.font_large.render("GAME OVER", True, RED)
+        go_text = self.font_large.render("游戏结束", True, RED)
         go_rect = go_text.get_rect(center=(SCREEN_WIDTH // 2, 200))
         self.screen.blit(go_text, go_rect)
 
-        score_text = self.font_medium.render(f"Final Score: {self.score}", True, WHITE)
+        score_text = self.font_medium.render(f"最终得分: {self.score}", True, WHITE)
         score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, 280))
         self.screen.blit(score_text, score_rect)
 
         collision_text = self.font_medium.render(
-            f"Collisions: {self.collisions}/{MAX_COLLISIONS}", True, YELLOW
+            f"碰撞次数: {self.collisions}/{MAX_COLLISIONS}", True, YELLOW
         )
         col_rect = collision_text.get_rect(center=(SCREEN_WIDTH // 2, 330))
         self.screen.blit(collision_text, col_rect)
 
-        restart_text = self.font_small.render("Press ENTER to Restart | ESC for Menu", True, GREEN)
+        restart_text = self.font_small.render("按 回车键 重新开始 | ESC 返回菜单", True, GREEN)
         restart_rect = restart_text.get_rect(center=(SCREEN_WIDTH // 2, 420))
         self.screen.blit(restart_text, restart_rect)

@@ -6,6 +6,10 @@ from constants import (
     SCREEN_HEIGHT, ROAD_LEFT, ROAD_RIGHT, BLACK, WHITE, YELLOW, RED,
 )
 
+LANE_CHANGE_MIN_INTERVAL = 2000
+LANE_CHANGE_MAX_INTERVAL = 5000
+LANE_CHANGE_SPEED = 2.0
+
 
 class Obstacle:
     def __init__(self, x, y):
@@ -47,12 +51,60 @@ class Vehicle:
         self.height = config["height"]
         self.color = config["color"]
         self.speed = random.uniform(*config["speed_range"])
+        self.lane_index = lane_index
         self.x = float(LANE_POSITIONS[lane_index])
         self.y = float(-self.height)
         self.type = "vehicle"
+        self.target_x = self.x
+        self.is_changing_lane = False
+        self.next_lane_change_time = pygame.time.get_ticks() + random.randint(
+            LANE_CHANGE_MIN_INTERVAL, LANE_CHANGE_MAX_INTERVAL
+        )
+
+    def try_lane_change(self, current_time, all_vehicles):
+        if self.is_changing_lane:
+            return
+        if current_time < self.next_lane_change_time:
+            return
+        if self.y < 0 or self.y > SCREEN_HEIGHT:
+            return
+
+        possible_lanes = []
+        if self.lane_index > 0:
+            possible_lanes.append(self.lane_index - 1)
+        if self.lane_index < len(LANE_POSITIONS) - 1:
+            possible_lanes.append(self.lane_index + 1)
+
+        random.shuffle(possible_lanes)
+        for target_lane in possible_lanes:
+            if self._is_lane_safe(target_lane, all_vehicles):
+                self.lane_index = target_lane
+                self.target_x = float(LANE_POSITIONS[target_lane])
+                self.is_changing_lane = True
+                break
+
+        self.next_lane_change_time = current_time + random.randint(
+            LANE_CHANGE_MIN_INTERVAL, LANE_CHANGE_MAX_INTERVAL
+        )
+
+    def _is_lane_safe(self, target_lane, all_vehicles):
+        target_x = LANE_POSITIONS[target_lane]
+        for v in all_vehicles:
+            if v is self:
+                continue
+            if abs(v.x - target_x) < 30 and abs(v.y - self.y) < 120:
+                return False
+        return True
 
     def update(self, player_speed):
         self.y += player_speed - self.speed
+        if self.is_changing_lane:
+            diff = self.target_x - self.x
+            if abs(diff) < LANE_CHANGE_SPEED:
+                self.x = self.target_x
+                self.is_changing_lane = False
+            else:
+                self.x += LANE_CHANGE_SPEED if diff > 0 else -LANE_CHANGE_SPEED
 
     def get_rect(self):
         return pygame.Rect(
@@ -126,7 +178,9 @@ class VehicleSpawner:
         return False
 
     def update(self, player_speed):
+        current_time = pygame.time.get_ticks()
         for v in self.vehicles:
+            v.try_lane_change(current_time, self.vehicles)
             v.update(player_speed)
         for o in self.obstacles:
             o.update(player_speed)
