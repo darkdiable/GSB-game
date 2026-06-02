@@ -90,13 +90,17 @@ class Player:
 
         if keys[pygame.K_s]:
             if self.on_ground:
+                if not self.proning:
+                    self.y += self.height - 28
                 self.proning = True
                 self.height = 28
                 self.width = 44
             else:
-                self.vel_y += 1
+                self.vel_y += 2
 
         if not self.proning:
+            if self.height == 28 and self.on_ground:
+                self.y -= 48 - 28
             self.height = 48
             self.width = 32
 
