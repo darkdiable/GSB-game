@@ -30,6 +30,8 @@ class Level:
                 self.tile_cache[tile_type] = create_bridge_tile()
             elif tile_type == "wall":
                 self.tile_cache[tile_type] = create_wall_tile()
+            elif tile_type == "water":
+                self.tile_cache[tile_type] = create_water_tile()
         return self.tile_cache[tile_type]
 
     def _build_level(self):
@@ -207,19 +209,6 @@ class Level:
                 tile = self._get_tile(tile_type)
                 if tile:
                     surface.blit(tile, (draw_x, ty))
-
-        for wz in self.water_zones:
-            draw_x = wz.x - self.camera_x
-            if -wz.width < draw_x < SCREEN_WIDTH + wz.width:
-                water_tile = self._get_tile("ground") if "ground" in self.tile_cache else None
-                if water_tile is None:
-                    water_tile = create_water_tile()
-                    self.tile_cache["water_tile"] = water_tile
-                for wx in range(wz.x, wz.x + wz.width, 32):
-                    dx = wx - self.camera_x
-                    if -32 < dx < SCREEN_WIDTH + 32:
-                        surface.blit(self.tile_cache.get("water_tile", water_tile),
-                                     (dx, wz.y))
 
     def _draw_decorations(self, surface):
         for dec_type, dx, dy in self.decoration_cache:
