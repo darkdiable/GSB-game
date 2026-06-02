@@ -15,7 +15,7 @@ class ScenerySegment:
 
     def draw(self, surface, scroll_y):
         rng = random.Random(self.random_seed)
-        y = self.y_offset - scroll_y
+        y = int(self.y_offset - scroll_y)
 
         if self.scenery_type == "seaside":
             self._draw_seaside(surface, y, rng)
