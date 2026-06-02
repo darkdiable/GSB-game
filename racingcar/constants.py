@@ -29,9 +29,18 @@ OBSTACLE_WIDTH = 40
 OBSTACLE_HEIGHT = 40
 
 VEHICLE_CONFIGS = {
-    "truck": {"width": 50, "height": 100, "speed_range": (2, 4), "color": (180, 80, 20)},
-    "sports_car": {"width": 38, "height": 65, "speed_range": (5, 8), "color": (220, 30, 30)},
-    "suv": {"width": 45, "height": 80, "speed_range": (3, 5), "color": (60, 60, 160)},
+    "truck": {
+        "width": 50, "height": 100, "speed_range": (2, 4), "color": (180, 80, 20),
+        "detection_distance": 180, "urgent_distance": 80,
+    },
+    "sports_car": {
+        "width": 38, "height": 65, "speed_range": (5, 8), "color": (220, 30, 30),
+        "detection_distance": 300, "urgent_distance": 140,
+    },
+    "suv": {
+        "width": 45, "height": 80, "speed_range": (3, 5), "color": (60, 60, 160),
+        "detection_distance": 240, "urgent_distance": 110,
+    },
 }
 VEHICLE_TYPES = list(VEHICLE_CONFIGS.keys())
 VEHICLE_SPAWN_INTERVAL_MS = 1500
