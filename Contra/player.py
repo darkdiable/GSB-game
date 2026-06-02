@@ -28,6 +28,7 @@ class Player:
         self.moving = False
         self.jumping = False
         self.shooting = False
+        self.was_jump_pressed = False
         self.last_shot_time = 0
         self.invincible = False
         self.invincible_timer = 0
@@ -78,6 +79,11 @@ class Player:
         self.aiming_up = False
         self.proning = False
         self.moving = False
+
+        jump_pressed = keys[pygame.K_k]
+        if jump_pressed and not self.was_jump_pressed:
+            self.jump()
+        self.was_jump_pressed = jump_pressed
 
         if keys[pygame.K_w]:
             self.aiming_up = True
@@ -132,16 +138,21 @@ class Player:
 
         self.on_ground = False
         for plat in platforms:
-            if self.rect.colliderect(plat):
-                if self.vel_y > 0:
-                    self.rect.bottom = plat.top
-                    self.vel_y = 0
-                    self.on_ground = True
-                    self.jumping = False
-                elif self.vel_y < 0:
+            if self.vel_y >= 0:
+                player_bottom = self.y + self.height
+                prev_bottom = player_bottom - self.vel_y
+                if prev_bottom <= plat.top and player_bottom >= plat.top:
+                    if self.x + self.width > plat.left and self.x < plat.right:
+                        self.y = plat.top - self.height
+                        self.rect.y = int(self.y)
+                        self.vel_y = 0
+                        self.on_ground = True
+                        self.jumping = False
+            else:
+                if self.rect.colliderect(plat):
                     self.rect.top = plat.bottom
                     self.vel_y = 0
-                self.y = self.rect.y
+                    self.y = self.rect.y
 
         if self.y > SCREEN_HEIGHT:
             self.hit()

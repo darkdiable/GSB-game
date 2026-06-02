@@ -94,9 +94,6 @@ class Game:
                 self.running = False
                 return
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_k:
-                    if self.player and self.player.alive:
-                        self.player.jump()
                 if event.key == pygame.K_ESCAPE:
                     self.state = STATE_PAUSED
 
