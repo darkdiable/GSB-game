@@ -1,5 +1,6 @@
 import pygame
 import math
+import random
 from . import config
 from .bullet import EnemyBullet
 
