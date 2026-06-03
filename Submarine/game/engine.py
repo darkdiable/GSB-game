@@ -97,6 +97,7 @@ class GameEngine:
         self.destroyer_spawn_timer = DESTROYER_SPAWN_RATE
         self.sub_spawn_timer = ENEMY_SUB_SPAWN_RATE
         self.score = 0
+        self.keys = {}
         self.game_state = 'playing'
 
     def handle_events(self):
