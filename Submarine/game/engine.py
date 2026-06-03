@@ -37,14 +37,52 @@ class GameEngine:
         self._init_fonts()
 
     def _init_fonts(self):
-        try:
-            self.font_large = pygame.font.SysFont('simhei,microsoftyahei,arial', 48)
-            self.font_medium = pygame.font.SysFont('simhei,microsoftyahei,arial', 32)
-            self.font_small = pygame.font.SysFont('simhei,microsoftyahei,arial', 20)
-        except:
-            self.font_large = pygame.font.Font(None, 48)
-            self.font_medium = pygame.font.Font(None, 32)
-            self.font_small = pygame.font.Font(None, 20)
+        all_fonts = pygame.font.get_fonts()
+
+        preferred_fonts = [
+            'stheitimedium',
+            'sthetilight',
+            'songti',
+            'stheitilight',
+            'stheitimedium',
+            'heiti sc',
+            'pingfang sc',
+            'microsoftyahei',
+            'simhei',
+            'arialunicodems',
+            'notosanscjksc',
+            'cjk symbols fallback'
+        ]
+
+        selected_font = None
+        for font_name in preferred_fonts:
+            if font_name in all_fonts:
+                try:
+                    test_font = pygame.font.SysFont(font_name, 20)
+                    test_surface = test_font.render('测试中文', True, (255, 255, 255))
+                    if test_surface.get_width() > 20:
+                        selected_font = font_name
+                        break
+                except:
+                    continue
+
+        if selected_font is None:
+            for font_name in all_fonts:
+                try:
+                    test_font = pygame.font.SysFont(font_name, 20)
+                    test_surface = test_font.render('测试中文', True, (255, 255, 255))
+                    if test_surface.get_width() > 20:
+                        selected_font = font_name
+                        break
+                except:
+                    continue
+
+        if selected_font is None:
+            selected_font = 'arial'
+
+        self.font_large = pygame.font.SysFont(selected_font, 48)
+        self.font_medium = pygame.font.SysFont(selected_font, 32)
+        self.font_small = pygame.font.SysFont(selected_font, 20)
 
     def reset_game(self):
         self.player = PlayerSubmarine()
