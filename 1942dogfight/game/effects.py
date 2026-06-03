@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 from . import config
 
 
@@ -120,6 +121,3 @@ class ScorePopup:
         text = font.render(str(self.score), True, config.YELLOW)
         text.set_alpha(alpha)
         surface.blit(text, (self.x, self.y))
-
-
-import math
